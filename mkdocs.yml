@@ -49,6 +49,7 @@ nav:
   - User Guide:
       - The CEL Language: guide/language.md
       - Environments & Programs: guide/api.md
+      - Plain .NET Types (POCOs): guide/native-types.md
       - Extension Libraries: guide/extensions.md
       - Protobuf Support: guide/protobuf.md
       - Working with ASTs: guide/ast.md
