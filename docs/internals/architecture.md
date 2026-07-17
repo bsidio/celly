@@ -9,7 +9,7 @@ A CEL expression goes through four stages:
 
 ```mermaid
 flowchart LR
-    SRC["source text<br/><code>x + 1 > 3</code>"] --> LEX[Lexer]
+    SRC["source text<br/>x + 1 &gt; 3"] --> LEX[Lexer]
     LEX -->|tokens| PARSE[Parser<br/>+ macro expansion]
     PARSE -->|AST| CHECK[Type Checker<br/><i>optional</i>]
     CHECK -->|typed AST| PLAN[Planner]
@@ -67,14 +67,14 @@ Two seams keep the core dependency-free while letting features plug in:
 
 ```mermaid
 flowchart LR
-    subgraph Celly core — zero deps
+    subgraph CORE["Celly core (zero deps)"]
         ENV[CelEnv] --> P[Planner]
         ENV --> C[Checker]
-        P & C --> SEAM([ITypeProvider / ITypeAdapter])
-        ENV --> LIB([CelLibrary])
+        P & C --> SEAM(["ITypeProvider / ITypeAdapter"])
+        ENV --> LIB(["CelLibrary"])
     end
-    PROTO[Celly.Protobuf<br/>ProtoTypeRegistry] -.implements.-> SEAM
-    EXT[Extensions<br/>strings, math, optionals, …] -.registers into.-> LIB
+    PROTO["Celly.Protobuf<br/>ProtoTypeRegistry"] -. implements .-> SEAM
+    EXT["Extensions<br/>strings, math, optionals, …"] -. registers into .-> LIB
 ```
 
 - **`ITypeProvider` / `ITypeAdapter`** (`src/Celly/Providers/`): struct construction,
