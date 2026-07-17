@@ -64,9 +64,13 @@ public class CelBenchmarks
     private CelProgram _cellyExtensions = null!;
     private CelProgram _cellySimpleBare = null!;
 
-    // ---- Cel.NET setup ----
+    // ---- Cel.NET (rayokota) setup ----
     private Script _celnetSimple = null!;
     private Script _celnetComprehension = null!;
+
+    // ---- TELUS Cel (compiles to a delegate) setup ----
+    private global::Cel.CelProgramDelegate _telusSimple = null!;
+    private global::Cel.CelProgramDelegate _telusComprehension = null!;
 
     private Dictionary<string, object?> _args = null!;
     private Dictionary<string, object> _celnetArgs = null!;
@@ -86,6 +90,11 @@ public class CelBenchmarks
         _celnetComprehension = host.BuildScript(Comprehension)
             .WithDeclarations(Decls.NewVar("items", Decls.NewListType(Decls.Int)))
             .Build();
+
+        var telusEnv = new global::Cel.CelEnvironment(
+            Enumerable.Empty<Google.Protobuf.Reflection.FileDescriptor>(), "");
+        _telusSimple = telusEnv.Compile(Simple);
+        _telusComprehension = telusEnv.Compile(Comprehension);
 
         var items = Enumerable.Range(0, 100).Select(i => (long)i).ToList();
         _args = new Dictionary<string, object?> { ["x"] = 42L, ["name"] = "hello", ["items"] = items };
@@ -111,6 +120,9 @@ public class CelBenchmarks
     [BenchmarkCategory("eval-simple"), Benchmark]
     public bool CelNet_Eval_Simple() => _celnetSimple.Execute<bool>(_celnetArgs);
 
+    [BenchmarkCategory("eval-simple"), Benchmark]
+    public object? TelusCel_Eval_Simple() => _telusSimple.Invoke(_args);
+
     // ---- eval: comprehension-heavy expression ----
 
     [BenchmarkCategory("eval-comprehension"), Benchmark(Baseline = true)]
@@ -118,6 +130,9 @@ public class CelBenchmarks
 
     [BenchmarkCategory("eval-comprehension"), Benchmark]
     public bool CelNet_Eval_Comprehension() => _celnetComprehension.Execute<bool>(_celnetArgs);
+
+    [BenchmarkCategory("eval-comprehension"), Benchmark]
+    public object? TelusCel_Eval_Comprehension() => _telusComprehension.Invoke(_args);
 
     // ---- eval: extension-heavy expression (strings + math); Celly vs bare env ----
     // (No Cel.NET row: it doesn't ship the math extension, so the expression won't compile there.)

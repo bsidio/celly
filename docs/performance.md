@@ -1,9 +1,10 @@
 # Performance
 
 Celly is designed for the policy-engine pattern: **compile an expression once, evaluate it
-many times**. The numbers below focus on that steady-state eval cost, compared against both
-the other native .NET CEL library ([Cel.NET](https://github.com/rayokota/cel.net)) and the
-reference Go implementation ([cel-go](https://github.com/google/cel-go)).
+many times**. The numbers below focus on that steady-state eval cost, compared against the
+other native .NET CEL libraries ([Cel.NET](https://github.com/rayokota/cel.net) and
+[TELUS `Cel`](https://github.com/telus-labs/cel-net)) and the reference Go implementation
+([cel-go](https://github.com/google/cel-go)).
 
 ## Results
 
@@ -13,13 +14,20 @@ tests/Celly.Benchmarks` and `go test -bench=.` in `benchmarks/celgo/`.*
 
 ### Evaluation (pre-compiled program, per call)
 
-| Workload | **Celly** | cel-go *(reference)* | Cel.NET |
-|---|--:|--:|--:|
-| Simple `x + 1 > 3 && name.startsWith('h')` | 130 ns | **107 ns** | 153 ns |
-| Comprehension `items.filter(…).map(…).exists(…)` (100 elems) | **15.1 µs** | 22.5 µs | 33.1 µs |
-| Extension-heavy `upperAscii/substring/join/string/math.greatest` | **11.6 µs** | 25.9 µs | — † |
+| Workload | **Celly** | cel-go *(reference)* | Cel.NET | TELUS `Cel` |
+|---|--:|--:|--:|--:|
+| Simple `x + 1 > 3 && name.startsWith('h')` | 129 ns | **107 ns** | 152 ns | 1,112 ns |
+| Comprehension `items.filter(…).map(…).exists(…)` (100 elems) | **14.8 µs** | 22.5 µs | 32.0 µs | 81.8 µs |
+| Extension-heavy `upperAscii/substring/join/string/math.greatest` | **11.6 µs** | 25.9 µs | — † | — † |
 
-† Cel.NET doesn't ship the math extension, so the expression won't compile there.
+† Neither Cel.NET nor TELUS `Cel` ships the strings/math extensions, so the expression
+won't compile there.
+
+**Celly is the fastest .NET CEL implementation of the three** — ~1.2× faster than Cel.NET
+and ~6–9× faster than TELUS `Cel` on these workloads, allocating far less in every case. Note
+that TELUS `Cel`'s "compiles to a delegate" design is *not* a JIT/IL fast path — the delegate
+wraps its interpreter, so it's actually the slowest of the three. Against the native Go
+reference, Celly is within ~1.2× on simple expressions and faster on comprehension-heavy ones.
 
 All benchmarks run with **all nine extension libraries enabled** (as a real deployment and
 the conformance runner do). That has **no measurable per-eval cost** — a simple expression
@@ -41,8 +49,9 @@ Three things stand out:
 
 Allocation differs by runtime and isn't directly comparable across the Go/.NET boundary:
 cel-go's escape analysis keeps simple-eval allocation very low (16 B), while Celly and
-Cel.NET allocate a `CelValue` result (472 B / 416 B). Within .NET, Celly allocates ~2.6×
-less than Cel.NET on the comprehension workload (41 KB vs 105 KB).
+Cel.NET allocate a `CelValue` result (472 B / 416 B). Within .NET, Celly allocates the least
+of the three — ~2.6× less than Cel.NET and ~6× less than TELUS `Cel` on the comprehension
+workload (41 KB vs 105 KB vs 249 KB).
 
 ### Celly pipeline costs
 

@@ -9,7 +9,7 @@ Celly is written from scratch in pure managed C# — no WASM shims, no Go-compil
 
 **Status: 1.0 — stable public API** (snapshot-tested), 100% conformance, fuzz-hardened.
 
-**⚡ Performance:** in the same class as the reference Go implementation — within ~1.2× of cel-go on simple expressions, and *faster than cel-go* on comprehension-heavy ones (15 µs vs 23 µs). Faster than Cel.NET across the board. See [Performance](https://bsid.io/celly/performance/).
+**⚡ Performance:** the fastest .NET CEL implementation — ~1.2× faster than Cel.NET and ~6–9× faster than TELUS `Cel`, allocating far less. In the same class as the reference Go implementation (within ~1.2× of cel-go on simple expressions; *faster* on comprehension-heavy ones). See [Performance](https://bsid.io/celly/performance/).
 
 **📖 Documentation: [bsid.io/celly](https://bsid.io/celly/)** — user guide plus a deep-dive internals track explaining how the lexer, parser, macros, type checker, evaluator, and protobuf integration work.
 

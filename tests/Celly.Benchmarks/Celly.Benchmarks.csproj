@@ -7,8 +7,9 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Celly/Celly.csproj" />
     <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
-    <!-- Cel.NET (rayokota) for apples-to-apples comparison on the same runtime. -->
+    <!-- Other native .NET CEL packages, for apples-to-apples comparison on the same runtime. -->
     <PackageReference Include="Cel.NET" Version="1.1.0" />
+    <PackageReference Include="Cel" Version="0.3.3" />
   </ItemGroup>
 
 </Project>
