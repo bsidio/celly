@@ -11,7 +11,7 @@ public static class Operators
     public const string LogicalAnd = "_&&_";
     public const string LogicalOr = "_||_";
     public const string LogicalNot = "!_";
-    public const string Equals = "_==_";
+    public new const string Equals = "_==_";
     public const string NotEquals = "_!=_";
     public const string Less = "_<_";
     public const string LessEquals = "_<=_";
