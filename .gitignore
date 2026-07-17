@@ -9,3 +9,6 @@ TestResults/
 BenchmarkDotNet.Artifacts/
 .env
 site/
+
+# Go benchmark build output
+benchmarks/celgo/*.test

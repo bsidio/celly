@@ -1,25 +1,37 @@
 # Performance
 
 Celly is designed for the policy-engine pattern: **compile an expression once, evaluate it
-many times**. The numbers below focus on that steady-state eval cost, with an
-apples-to-apples comparison against [Cel.NET](https://github.com/rayokota/cel.net) (the
-other native .NET CEL library) on the same machine and runtime.
+many times**. The numbers below focus on that steady-state eval cost, compared against both
+the other native .NET CEL library ([Cel.NET](https://github.com/rayokota/cel.net)) and the
+reference Go implementation ([cel-go](https://github.com/google/cel-go)).
 
 ## Results
 
-*net8.0, Apple Silicon, BenchmarkDotNet short job. Reproduce with*
-`dotnet run -c Release --project tests/Celly.Benchmarks`.
+*Apple Silicon, same machine. .NET on net8.0 via BenchmarkDotNet (short job); cel-go 0.29
+via `go test -bench` (go1.26). Reproduce: `dotnet run -c Release --project
+tests/Celly.Benchmarks` and `go test -bench=.` in `benchmarks/celgo/`.*
 
 ### Evaluation (pre-compiled program, per call)
 
-| Workload | Celly | Cel.NET | Speedup | Celly alloc | Cel.NET alloc |
-|---|--:|--:|--:|--:|--:|
-| Simple `x + 1 > 3 && name.startsWith('h')` | **126 ns** | 150 ns | 1.2× | 472 B | 416 B |
-| Comprehension `items.filter(…).map(…).exists(…)` (100 elems) | **14.7 µs** | 32.4 µs | **2.2×** | **41 KB** | 105 KB |
+| Workload | **Celly** | cel-go *(reference)* | Cel.NET |
+|---|--:|--:|--:|
+| Simple `x + 1 > 3 && name.startsWith('h')` | 130 ns | **107 ns** | 153 ns |
+| Comprehension `items.filter(…).map(…).exists(…)` (100 elems) | **15.1 µs** | 22.5 µs | 33.1 µs |
 
-Celly is faster on both, and markedly so on comprehension-heavy expressions — the workload
-where the [rope-based list concatenation](internals/values.md) turns the
-`@result + [element]` accumulation pattern from O(n²) into O(n).
+Two things stand out:
+
+- **On simple expressions, Celly is within ~1.2× of the Go reference** and faster than the
+  other .NET library — a good place to be for a managed implementation measured against
+  native Go.
+- **On comprehension-heavy expressions, Celly is the fastest of the three — faster than
+  cel-go itself** (15.1 µs vs 22.5 µs, ~1.5×). The [rope-based list
+  concatenation](internals/values.md) turns the `@result + [element]` accumulation pattern
+  from O(n²) into O(n), which is exactly where comprehension cost concentrates.
+
+Allocation differs by runtime and isn't directly comparable across the Go/.NET boundary:
+cel-go's escape analysis keeps simple-eval allocation very low (16 B), while Celly and
+Cel.NET allocate a `CelValue` result (472 B / 416 B). Within .NET, Celly allocates ~2.6×
+less than Cel.NET on the comprehension workload (41 KB vs 105 KB).
 
 ### Celly pipeline costs
 
@@ -50,10 +62,15 @@ string into a reusable `CelProgram`.
 - Cel.NET returns a native `bool`; Celly returns a `CelValue` (a small extra allocation
   the simple-case alloc figures reflect — Celly is a hair heavier there, faster in time).
 - These are microbenchmarks on one machine; treat the **ratios** as the signal, not the
-  absolute nanoseconds. Your expressions, data shapes, and hardware will differ — the
-  benchmark project is in the repo so you can measure your own workload.
-- No comparison against cel-go is shown: it runs on a different runtime (Go), so any number
-  would measure the runtimes as much as the implementations.
+  absolute nanoseconds. Your expressions, data shapes, and hardware will differ — both
+  benchmark projects are in the repo (`tests/Celly.Benchmarks`, `benchmarks/celgo`) so you
+  can measure your own workload.
+- **The cel-go comparison crosses runtimes** (Go vs .NET/CoreCLR): it measures the runtimes
+  as much as the implementations. A sub-2× gap on a ~100 ns operation can be entirely GC
+  model, allocation strategy, and JIT-vs-AOT differences. Read it as "Celly is in the same
+  performance class as the reference implementation," not as a controlled head-to-head.
+- cel-go's `Program.Eval` returns `(ref.Val, EvalDetails, error)`; the benchmark uses the
+  standard fast path and ignores details, matching typical usage.
 
 ## If you need more speed
 
