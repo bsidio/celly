@@ -48,6 +48,8 @@ tools/vendor-conformance.sh               # refresh vendored cel-spec protos + t
 - Canonical protos are package `cel.expr`; `google.api.expr.v1alpha1` is deleted legacy — never reference it.
 - Google.Protobuf C# has NO textproto parser — conformance textprotos are converted to `.binpb` by `tools/vendor-conformance.sh` using `protoc --encode`. Don't try to parse textproto at test runtime.
 
-## Milestones (tracked in the session task list)
+## Status
 
-M0 skeleton+pipeline → M1 lexer/parser/macros → M2 values+evaluator (parse-only) → M3 stdlib complete → M4 checker → M5 Celly.Protobuf → M6 optionals/unknowns/extensions (all 29 conformance files green) → M7 hardening+packaging. Per-milestone conformance targets are in `docs/PLAN.md`.
+**All milestones complete. Conformance: 2456/2456 (100%), `testdata/known-failures.txt` is EMPTY** — any conformance regression fails CI. The suite's `strong_*` enum sections run under strong-enum mode (`ProtoTypeRegistry.FromFiles(strongEnums: true)`); everything else runs the default legacy-enum mode. Milestone history is in `docs/PLAN.md` and the git log (M0–M7).
+
+Extension libraries live in `src/Celly/Extensions/` as `CelLibrary` instances (macros + runtime functions + checker decls registered together via `CelEnvSettings.Libraries`).

@@ -1,5 +1,11 @@
 # Celly — Native CEL (Common Expression Language) for .NET
 
+> **Status (2026-07-17): COMPLETE.** All milestones shipped; conformance is 2456/2456 (100%)
+> with an empty known-failures ratchet. Beyond this plan, a strong-enum mode
+> (`ProtoTypeRegistry.FromFiles(strongEnums: true, …)`) was added so the suite's strong_*
+> enum sections pass under the semantics they document. This file is preserved as the
+> original design document.
+
 ## Context
 
 Build a from-scratch, **pure managed C#** implementation of Google's Common Expression Language (CEL, github.com/cel-expr/cel-spec — formerly google/cel-spec) as a NuGet package family with complete spec support, validated against the official conformance suite. No WASM shims, no Go-compiled artifacts, no native bindings — native .NET processing throughout.
