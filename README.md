@@ -124,6 +124,34 @@ var env = CelEnv.Create(new CelEnvSettings
 
 See the [extensions guide](https://bsid.io/celly/guide/extensions/) for examples of each.
 
+## Enabling protobuf
+
+Protobuf support is a **separate setting from extensions** — enabling extension libraries
+does *not* turn on protobuf, and vice-versa. If you construct messages (`MyMessage{...}`),
+read message fields, or use wrappers / enums / `Any`, register a `ProtoTypeRegistry` on
+**both** `TypeProvider` and `Adapter`:
+
+```csharp
+using Celly;
+using Celly.Protobuf;
+
+// One descriptor pulls in its whole dependency graph (nested types, enums, extensions).
+var registry = ProtoTypeRegistry.FromFiles(MyMessage.Descriptor.File);
+
+var env = CelEnv.Create(new CelEnvSettings
+{
+    Container    = "my.pkg",     // so expressions can write MyMessage{...} unqualified
+    TypeProvider = registry,     // message construction, field types, enums, wrappers, Any
+    Adapter      = registry,     // adapts IMessage values passed in activations
+    // Libraries = [ ... ],      // extensions are separate — add them here too if needed
+});
+```
+
+Without `TypeProvider`/`Adapter`, every proto/wrapper/enum expression fails with
+"unknown type" — which is exactly why running the conformance suite with only `Libraries`
+set (extensions but no protobuf) fails all ~600 protobuf tests. To enable **everything** at
+once, see the [full configuration](https://bsid.io/celly/internals/conformance/#the-full-configuration-a-runner-must-use).
+
 ## Building
 
 Requires the .NET 8 SDK. `protoc` is only needed to refresh vendored conformance data.

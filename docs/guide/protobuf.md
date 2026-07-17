@@ -3,24 +3,48 @@
 CEL's type system is defined in terms of protobuf. The `Celly.Protobuf` package plugs
 protobuf messages into the core through the provider seam (`ITypeProvider`/`ITypeAdapter`).
 
+!!! warning "Protobuf support is a separate step from extension libraries"
+    Enabling **extension libraries** (`Libraries = [StringsLibrary.Instance, …]`) and
+    enabling **protobuf type support** (`TypeProvider`/`Adapter`) are **two independent
+    settings**. Adding the extension libraries does *not* turn on protobuf, and vice-versa.
+    If you construct messages (`MyMessage{...}`), read message fields, or use wrappers /
+    enums / `Any`, you **must** set `TypeProvider` and `Adapter` — otherwise every one of
+    those evaluations fails with "unknown type". (Enabling extensions but not protobuf is
+    the single most common misconfiguration; it makes all proto tests fail while everything
+    else works.)
+
 ## Setup
+
+Two lines turn it on — a registry built from your message descriptors, wired into both
+`TypeProvider` (construction, field types, enums) and `Adapter` (adapting `IMessage` values
+you pass in):
 
 ```csharp
 using Celly;
 using Celly.Protobuf;
 
-var registry = ProtoTypeRegistry.FromFiles(MyMessage.Descriptor.File);
+// 1. Build a registry from your proto message types. One descriptor pulls in its whole
+//    dependency graph — nested types, enums, extensions — recursively. WKTs are always on.
+var registry = ProtoTypeRegistry.FromFiles(
+    MyMessage.Descriptor.File,
+    AnotherMessage.Descriptor.File);
 
+// 2. Wire it into BOTH TypeProvider and Adapter.
 var env = CelEnv.Create(new CelEnvSettings
 {
     Container = "my.pkg",          // so expressions can say MyMessage{...} unqualified
     TypeProvider = registry,       // message construction, field types, enum constants
     Adapter = registry,            // adapts IMessage values in activations
+
+    // Extensions are separate — add them here if you also want strings/math/optionals/etc.:
+    // Libraries = [StringsLibrary.Instance, MathLibrary.Instance, OptionalsLibrary.Instance],
 });
 ```
 
-Registering a `FileDescriptor` pulls in its dependencies, nested types, enums, and
-extensions recursively. Well-known types are always available.
+That's it — `MyMessage{...}` construction, `msg.field` access, `has(msg.field)`, wrappers,
+`Any`, and enum constants now all work. To enable *everything* (all extension libraries
+**and** protobuf) in one env, see the
+[full configuration](../internals/conformance.md#the-full-configuration-a-runner-must-use).
 
 ## What you can do
 
