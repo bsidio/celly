@@ -35,6 +35,10 @@ public static class ConformanceHarness
 
     public static void Run(SimpleTest test) => Run(test, strongEnums: false);
 
+    // Audit switch: CELLY_BARE=1 strips the extension libraries and proto type support that a
+    // conformance runner is expected to enable — reproducing what a misconfigured harness sees.
+    private static readonly bool Bare = Environment.GetEnvironmentVariable("CELLY_BARE") == "1";
+
     public static void Run(SimpleTest test, bool strongEnums)
     {
         var registry = strongEnums ? StrongRegistry : Registry;
@@ -42,9 +46,9 @@ public static class ConformanceHarness
         {
             Container = test.Container,
             DisableMacros = test.DisableMacros,
-            TypeProvider = registry,
-            Adapter = registry,
-            Libraries =
+            TypeProvider = Bare ? Celly.Providers.EmptyTypeProvider.Instance : registry,
+            Adapter = Bare ? Celly.Providers.NativeTypeAdapter.Instance : registry,
+            Libraries = Bare ? [] :
             [
                 .. strongEnums ? new[] { StrongEnumLibrary } : [],
                 Celly.Extensions.OptionalsLibrary.Instance,

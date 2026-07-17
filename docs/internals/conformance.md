@@ -73,6 +73,24 @@ The pass-rate history, for the record:
 | M6 extensions | 2,438 | optionals, string_ext, math_ext, macros2, all *_ext files |
 | strong enums | **2,456 (100%)** | enums(strong) |
 
+## Extensions and proto support are opt-in — a runner must enable them
+
+The suite has separate files (`string_ext`, `math_ext`, `optionals`, `wrappers`, `proto2`,
+…) because those features are **opt-in**, exactly as in every CEL implementation: cel-go
+makes you call `ext.Strings()`, `cel.OptionalTypes()`, and register your proto types; Celly
+makes you add the libraries to `CelEnvSettings.Libraries` and pass a `ProtoTypeRegistry`.
+The conformance harness enables all of them (see `ConformanceHarness.Run`) — that is the
+*correct* way to run the suite, and it is what cel-go/cel-java/cel-cpp do too.
+
+Running Celly **without** enabling those features fails every extension and proto test —
+not because the implementation lacks them, but because the host didn't turn them on. You
+can see this yourself: `CELLY_BARE=1 dotnet test tests/Celly.Conformance` strips the
+libraries and registry and drops the pass rate to ~1,300/2,456, with `wrappers`, every
+`*_ext` file, and `optionals` (95.7%) failing. That number reflects a bare configuration,
+not the implementation's capability. (It also demonstrates the result matcher is strict:
+it produces ~1,150 genuine failures when features are disabled — a matcher that trivially
+passed everything would still report 100% in bare mode.)
+
 ## The strong-enum caveat, stated plainly
 
 The suite's `enums` file contains `legacy_*` and `strong_*` sections that run the **same

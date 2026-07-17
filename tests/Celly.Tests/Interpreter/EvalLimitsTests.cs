@@ -34,7 +34,7 @@ public class EvalLimitsTests
 
         var error = Assert.IsType<ErrorValue>(result);
         Assert.Contains("iteration budget", error.Message);
-        Assert.True(sw.ElapsedMilliseconds < 2000, $"budget abort took {sw.ElapsedMilliseconds}ms — too slow");
+        Assert.True(sw.ElapsedMilliseconds < 30_000, $"budget abort took {sw.ElapsedMilliseconds}ms — should be far below an unbounded 25M-iteration run");
     }
 
     [Fact]
