@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Celly.Protobuf</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <PackageId>Celly.Protobuf</PackageId>
+    <Description>Protobuf integration for Celly (CEL for .NET): message types, well-known types, enums, and cel.expr AST interop.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Celly/Celly.csproj" />
+    <PackageReference Include="Google.Protobuf" Version="3.31.1" />
+  </ItemGroup>
+
+  <!-- Codegen for the canonical cel.expr protos (syntax/checked/value/eval) used by AstConverter/ValueConverter. -->
+  <ItemGroup>
+    <PackageReference Include="Grpc.Tools" Version="2.72.0" PrivateAssets="all" />
+    <Protobuf Include="../../proto/cel/expr/syntax.proto" ProtoRoot="../../proto" GrpcServices="None" Access="Public" />
+    <Protobuf Include="../../proto/cel/expr/checked.proto" ProtoRoot="../../proto" GrpcServices="None" Access="Public" />
+    <Protobuf Include="../../proto/cel/expr/value.proto" ProtoRoot="../../proto" GrpcServices="None" Access="Public" />
+    <Protobuf Include="../../proto/cel/expr/eval.proto" ProtoRoot="../../proto" GrpcServices="None" Access="Public" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,3 @@
+Vendored from https://github.com/cel-expr/cel-spec.git @ 59505c14f3187e6eb9684fbd3d07146f614c6148
+Files: 30 textprotos encoded as SimpleTestFile binpb.
+Refresh with tools/vendor-conformance.sh — do not edit by hand.

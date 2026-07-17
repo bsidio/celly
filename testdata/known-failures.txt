@@ -1,0 +1,8 @@
+# Ratcheting conformance skip-list. See tests/Celly.Conformance/KnownFailures.cs.
+#
+# Entries: exact "file/section/test" ids, "prefix/*" globs, or "*" for everything.
+# A listed case that fails is an expected failure; a listed case that PASSES fails
+# the build until its entry is removed — the pass rate can only go up.
+#
+# Bootstrap state (M0): no evaluator yet, everything is an expected failure.
+*

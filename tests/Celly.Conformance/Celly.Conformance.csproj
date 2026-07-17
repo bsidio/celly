@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Celly/Celly.csproj" />
+    <ProjectReference Include="../../src/Celly.Protobuf/Celly.Protobuf.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Conformance test schema + TestAllTypes for env registration and Any resolution. -->
+  <ItemGroup>
+    <PackageReference Include="Grpc.Tools" Version="2.72.0" PrivateAssets="all" />
+    <Protobuf Include="../../proto/cel/expr/conformance/test/simple.proto" ProtoRoot="../../proto" GrpcServices="None" />
+    <Protobuf Include="../../proto/cel/expr/conformance/proto2/test_all_types.proto" ProtoRoot="../../proto" GrpcServices="None" />
+    <Protobuf Include="../../proto/cel/expr/conformance/proto2/test_all_types_extensions.proto" ProtoRoot="../../proto" GrpcServices="None" />
+    <Protobuf Include="../../proto/cel/expr/conformance/proto3/test_all_types.proto" ProtoRoot="../../proto" GrpcServices="None" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="../../testdata/*.binpb" LinkBase="testdata" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../testdata/known-failures.txt" Link="testdata/known-failures.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

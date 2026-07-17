@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Celly</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <PackageId>Celly</PackageId>
+    <Description>Native C# implementation of the Common Expression Language (CEL): parser, type checker, and evaluator with zero dependencies.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <!-- Core must remain dependency-free: no PackageReference items allowed here. -->
+
+</Project>

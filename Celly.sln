@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7B54DEF5-7380-41B3-B3F5-174A3F1F460D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Celly", "src\Celly\Celly.csproj", "{A0859AD2-B7CA-4A08-8A61-A7DFE902FB90}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Celly.Protobuf", "src\Celly.Protobuf\Celly.Protobuf.csproj", "{C3109B67-5328-4BF8-B9FD-CE39AEC0ED64}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{258BC789-188E-4C18-99A2-2914A3A2F1FC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Celly.Tests", "tests\Celly.Tests\Celly.Tests.csproj", "{1754A76D-0B51-46B2-9968-38B85D7688BA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Celly.Protobuf.Tests", "tests\Celly.Protobuf.Tests\Celly.Protobuf.Tests.csproj", "{C6DEE189-D65A-4CCB-8C6B-D7C4057990FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Celly.Conformance", "tests\Celly.Conformance\Celly.Conformance.csproj", "{2D2FACD2-F6D1-4E16-B260-40F21DECDE13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Celly.Benchmarks", "tests\Celly.Benchmarks\Celly.Benchmarks.csproj", "{B1CEC92A-7950-49DB-B061-08A8D999E676}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A0859AD2-B7CA-4A08-8A61-A7DFE902FB90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0859AD2-B7CA-4A08-8A61-A7DFE902FB90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0859AD2-B7CA-4A08-8A61-A7DFE902FB90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0859AD2-B7CA-4A08-8A61-A7DFE902FB90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3109B67-5328-4BF8-B9FD-CE39AEC0ED64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3109B67-5328-4BF8-B9FD-CE39AEC0ED64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3109B67-5328-4BF8-B9FD-CE39AEC0ED64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3109B67-5328-4BF8-B9FD-CE39AEC0ED64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1754A76D-0B51-46B2-9968-38B85D7688BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1754A76D-0B51-46B2-9968-38B85D7688BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1754A76D-0B51-46B2-9968-38B85D7688BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1754A76D-0B51-46B2-9968-38B85D7688BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6DEE189-D65A-4CCB-8C6B-D7C4057990FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6DEE189-D65A-4CCB-8C6B-D7C4057990FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6DEE189-D65A-4CCB-8C6B-D7C4057990FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6DEE189-D65A-4CCB-8C6B-D7C4057990FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D2FACD2-F6D1-4E16-B260-40F21DECDE13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D2FACD2-F6D1-4E16-B260-40F21DECDE13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D2FACD2-F6D1-4E16-B260-40F21DECDE13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D2FACD2-F6D1-4E16-B260-40F21DECDE13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1CEC92A-7950-49DB-B061-08A8D999E676}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1CEC92A-7950-49DB-B061-08A8D999E676}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1CEC92A-7950-49DB-B061-08A8D999E676}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1CEC92A-7950-49DB-B061-08A8D999E676}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A0859AD2-B7CA-4A08-8A61-A7DFE902FB90} = {7B54DEF5-7380-41B3-B3F5-174A3F1F460D}
+		{C3109B67-5328-4BF8-B9FD-CE39AEC0ED64} = {7B54DEF5-7380-41B3-B3F5-174A3F1F460D}
+		{1754A76D-0B51-46B2-9968-38B85D7688BA} = {258BC789-188E-4C18-99A2-2914A3A2F1FC}
+		{C6DEE189-D65A-4CCB-8C6B-D7C4057990FF} = {258BC789-188E-4C18-99A2-2914A3A2F1FC}
+		{2D2FACD2-F6D1-4E16-B260-40F21DECDE13} = {258BC789-188E-4C18-99A2-2914A3A2F1FC}
+		{B1CEC92A-7950-49DB-B061-08A8D999E676} = {258BC789-188E-4C18-99A2-2914A3A2F1FC}
+	EndGlobalSection
+EndGlobal
