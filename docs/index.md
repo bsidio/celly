@@ -44,6 +44,7 @@ dotnet add package Celly.Protobuf   # only if your data is protobuf messages
 ## Where to go next
 
 - **[Getting Started](getting-started.md)** — install, evaluate your first expression, bind variables
+- **[Examples & Recipes](examples.md)** — twelve complete scenarios: authorization, validation, feature flags, rule engines, policy caching, and more
 - **User Guide** — the [CEL language](guide/language.md), the [API](guide/api.md), [extensions](guide/extensions.md), [protobuf](guide/protobuf.md)
 - **Internals** — a guided tour of how the implementation actually works, starting with the
   [Architecture Overview](internals/architecture.md). Written to be readable top-to-bottom.
