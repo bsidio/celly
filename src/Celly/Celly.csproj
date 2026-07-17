@@ -14,6 +14,7 @@
     <None Include="../../README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
-  <!-- Core must remain dependency-free: no PackageReference items allowed here. -->
+
+  <!-- Core must remain dependency-free: no runtime PackageReference items allowed here. -->
 
 </Project>

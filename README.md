@@ -7,6 +7,8 @@ Celly is written from scratch in pure managed C# — no WASM shims, no Go-compil
 > ✅ **Conformance: 2,456 / 2,456 (100%)** of the official cel-spec conformance suite
 > (30 testdata files, pinned @ [`59505c1`](https://github.com/cel-expr/cel-spec/commit/59505c14f3187e6eb9684fbd3d07146f614c6148)), verified in CI on Linux, Windows, and macOS.
 
+**Status: 1.0 — stable public API** (snapshot-tested), 100% conformance, fuzz-hardened.
+
 **⚡ Performance:** faster than Cel.NET — 2.2× on comprehension-heavy expressions (2.6× less memory), 1.2× on simple ones. See [Performance](https://bsid.io/celly/performance/).
 
 **📖 Documentation: [bsid.io/celly](https://bsid.io/celly/)** — user guide plus a deep-dive internals track explaining how the lexer, parser, macros, type checker, evaluator, and protobuf integration work.

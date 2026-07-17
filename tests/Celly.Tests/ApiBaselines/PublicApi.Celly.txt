@@ -1,0 +1,928 @@
+static class Celly.Ast.AstTools
+    System.Collections.Generic.IEnumerable<Celly.Ast.Expr> Children(Celly.Ast.Expr expr)
+    System.Collections.Generic.IEnumerable<Celly.Ast.Expr> DescendantsAndSelf(Celly.Ast.Expr expr)
+    System.Collections.Generic.IReadOnlySet<System.String> CalledFunctions(Celly.Ast.Expr expr)
+    System.Collections.Generic.IReadOnlySet<System.String> ReferencedVariables(Celly.Ast.Expr expr)
+sealed class Celly.Ast.CallExpr : Celly.Ast.Expr
+    .ctor(System.Int64 id, Celly.Ast.Expr target, System.String function, System.Collections.Generic.IReadOnlyList<Celly.Ast.Expr> args)
+    Celly.Ast.Expr Target { get; }
+    Celly.Ast.Expr get_Target()
+    System.Collections.Generic.IReadOnlyList<Celly.Ast.Expr> Args { get; }
+    System.Collections.Generic.IReadOnlyList<Celly.Ast.Expr> get_Args()
+    System.String Function { get; }
+    System.String get_Function()
+sealed class Celly.Ast.CelAbstractSyntax
+    .ctor(Celly.Ast.Expr expr, Celly.Ast.SourceInfo sourceInfo)
+    Celly.Ast.Expr Expr { get; }
+    Celly.Ast.Expr get_Expr()
+    Celly.Ast.SourceInfo SourceInfo { get; }
+    Celly.Ast.SourceInfo get_SourceInfo()
+    System.Boolean IsChecked { get; }
+    System.Boolean get_IsChecked()
+    System.Collections.Generic.IReadOnlyDictionary<System.Int64, Celly.Checking.ReferenceInfo> ReferenceMap { get; set; }
+    System.Collections.Generic.IReadOnlyDictionary<System.Int64, Celly.Checking.ReferenceInfo> get_ReferenceMap()
+    System.Collections.Generic.IReadOnlyDictionary<System.Int64, Celly.Types.CelType> TypeMap { get; set; }
+    System.Collections.Generic.IReadOnlyDictionary<System.Int64, Celly.Types.CelType> get_TypeMap()
+    System.Void AnnotateChecked(System.Collections.Generic.IReadOnlyDictionary<System.Int64, Celly.Types.CelType> typeMap, System.Collections.Generic.IReadOnlyDictionary<System.Int64, Celly.Checking.ReferenceInfo> referenceMap)
+struct Celly.Ast.CelConstant
+    Celly.Ast.CelConstant Of(System.Boolean value)
+    Celly.Ast.CelConstant Of(System.Byte[] value)
+    Celly.Ast.CelConstant Of(System.Double value)
+    Celly.Ast.CelConstant Of(System.Int64 value)
+    Celly.Ast.CelConstant Of(System.String value)
+    Celly.Ast.CelConstant OfUint(System.UInt64 value)
+    Celly.Ast.ConstantKind Kind { get; }
+    Celly.Ast.ConstantKind get_Kind()
+    System.Boolean BoolValue { get; }
+    System.Boolean get_BoolValue()
+    System.Byte[] BytesValue { get; }
+    System.Byte[] get_BytesValue()
+    System.Double DoubleValue { get; }
+    System.Double get_DoubleValue()
+    System.Int64 IntValue { get; }
+    System.Int64 get_IntValue()
+    System.String StringValue { get; }
+    System.String get_StringValue()
+    System.UInt64 UintValue { get; }
+    System.UInt64 get_UintValue()
+    readonly Celly.Ast.CelConstant False
+    readonly Celly.Ast.CelConstant Null
+    readonly Celly.Ast.CelConstant True
+sealed class Celly.Ast.ComprehensionExpr : Celly.Ast.Expr
+    .ctor(System.Int64 id, System.String iterVar, System.String iterVar2, Celly.Ast.Expr iterRange, System.String accuVar, Celly.Ast.Expr accuInit, Celly.Ast.Expr loopCondition, Celly.Ast.Expr loopStep, Celly.Ast.Expr result)
+    Celly.Ast.Expr AccuInit { get; }
+    Celly.Ast.Expr IterRange { get; }
+    Celly.Ast.Expr LoopCondition { get; }
+    Celly.Ast.Expr LoopStep { get; }
+    Celly.Ast.Expr Result { get; }
+    Celly.Ast.Expr get_AccuInit()
+    Celly.Ast.Expr get_IterRange()
+    Celly.Ast.Expr get_LoopCondition()
+    Celly.Ast.Expr get_LoopStep()
+    Celly.Ast.Expr get_Result()
+    System.String AccuVar { get; }
+    System.String IterVar { get; }
+    System.String IterVar2 { get; }
+    System.String get_AccuVar()
+    System.String get_IterVar()
+    System.String get_IterVar2()
+sealed class Celly.Ast.ConstExpr : Celly.Ast.Expr
+    .ctor(System.Int64 id, Celly.Ast.CelConstant value)
+    Celly.Ast.CelConstant Value { get; }
+    Celly.Ast.CelConstant get_Value()
+enum Celly.Ast.ConstantKind : System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
+    const Celly.Ast.ConstantKind Bool
+    const Celly.Ast.ConstantKind Bytes
+    const Celly.Ast.ConstantKind Double
+    const Celly.Ast.ConstantKind Int
+    const Celly.Ast.ConstantKind Null
+    const Celly.Ast.ConstantKind String
+    const Celly.Ast.ConstantKind Uint
+    field System.Int32 value__
+abstract class Celly.Ast.Expr
+    System.Int64 Id { get; }
+    System.Int64 get_Id()
+    readonly Celly.Ast.Expr Unspecified
+static class Celly.Ast.ExprFormatter
+    System.String Format(Celly.Ast.Expr expr)
+sealed class Celly.Ast.IdentExpr : Celly.Ast.Expr
+    .ctor(System.Int64 id, System.String name)
+    System.String Name { get; }
+    System.String get_Name()
+sealed class Celly.Ast.ListExpr : Celly.Ast.Expr
+    .ctor(System.Int64 id, System.Collections.Generic.IReadOnlyList<Celly.Ast.Expr> elements, System.Collections.Generic.IReadOnlyList<System.Int32> optionalIndices)
+    System.Collections.Generic.IReadOnlyList<Celly.Ast.Expr> Elements { get; }
+    System.Collections.Generic.IReadOnlyList<Celly.Ast.Expr> get_Elements()
+    System.Collections.Generic.IReadOnlyList<System.Int32> OptionalIndices { get; }
+    System.Collections.Generic.IReadOnlyList<System.Int32> get_OptionalIndices()
+sealed class Celly.Ast.MapEntry
+    .ctor(System.Int64 id, Celly.Ast.Expr key, Celly.Ast.Expr value, System.Boolean optional)
+    Celly.Ast.Expr Key { get; }
+    Celly.Ast.Expr Value { get; }
+    Celly.Ast.Expr get_Key()
+    Celly.Ast.Expr get_Value()
+    System.Boolean Optional { get; }
+    System.Boolean get_Optional()
+    System.Int64 Id { get; }
+    System.Int64 get_Id()
+sealed class Celly.Ast.MapExpr : Celly.Ast.Expr
+    .ctor(System.Int64 id, System.Collections.Generic.IReadOnlyList<Celly.Ast.MapEntry> entries)
+    System.Collections.Generic.IReadOnlyList<Celly.Ast.MapEntry> Entries { get; }
+    System.Collections.Generic.IReadOnlyList<Celly.Ast.MapEntry> get_Entries()
+sealed class Celly.Ast.SelectExpr : Celly.Ast.Expr
+    .ctor(System.Int64 id, Celly.Ast.Expr operand, System.String field, System.Boolean testOnly)
+    Celly.Ast.Expr Operand { get; }
+    Celly.Ast.Expr get_Operand()
+    System.Boolean TestOnly { get; }
+    System.Boolean get_TestOnly()
+    System.String Field { get; }
+    System.String get_Field()
+sealed class Celly.Ast.SourceInfo
+    .ctor(Celly.Common.Source source)
+    Celly.Common.Location LocationOf(System.Int64 exprId)
+    Celly.Common.Source Source { get; }
+    Celly.Common.Source get_Source()
+    System.Collections.Generic.IReadOnlyDictionary<System.Int64, Celly.Ast.Expr> MacroCalls { get; }
+    System.Collections.Generic.IReadOnlyDictionary<System.Int64, Celly.Ast.Expr> get_MacroCalls()
+    System.Collections.Generic.IReadOnlyDictionary<System.Int64, System.Int32> Positions { get; }
+    System.Collections.Generic.IReadOnlyDictionary<System.Int64, System.Int32> get_Positions()
+    System.Int32 PositionOf(System.Int64 exprId)
+    System.Void AddMacroCall(System.Int64 exprId, Celly.Ast.Expr call)
+    System.Void SetPosition(System.Int64 exprId, System.Int32 offset)
+sealed class Celly.Ast.StructExpr : Celly.Ast.Expr
+    .ctor(System.Int64 id, System.String messageName, System.Collections.Generic.IReadOnlyList<Celly.Ast.StructField> fields)
+    System.Collections.Generic.IReadOnlyList<Celly.Ast.StructField> Fields { get; }
+    System.Collections.Generic.IReadOnlyList<Celly.Ast.StructField> get_Fields()
+    System.String MessageName { get; }
+    System.String get_MessageName()
+sealed class Celly.Ast.StructField
+    .ctor(System.Int64 id, System.String name, Celly.Ast.Expr value, System.Boolean optional)
+    Celly.Ast.Expr Value { get; }
+    Celly.Ast.Expr get_Value()
+    System.Boolean Optional { get; }
+    System.Boolean get_Optional()
+    System.Int64 Id { get; }
+    System.Int64 get_Id()
+    System.String Name { get; }
+    System.String get_Name()
+static class Celly.Ast.Unparser
+    System.String Unparse(Celly.Ast.CelAbstractSyntax ast)
+    System.String Unparse(Celly.Ast.Expr expr, Celly.Ast.SourceInfo sourceInfo)
+sealed class Celly.CelEnv
+    Celly.CelEnv Create(Celly.CelEnvSettings settings)
+    Celly.CelEnvSettings Settings { get; }
+    Celly.CelEnvSettings get_Settings()
+    Celly.CelProgram Compile(System.String expression)
+    Celly.CelProgram Program(Celly.Ast.CelAbstractSyntax ast)
+    Celly.Checking.CheckResult Check(Celly.Ast.CelAbstractSyntax ast)
+    Celly.Parsing.ParseResult Parse(System.String expression)
+    readonly Celly.CelEnv Default
+sealed class Celly.CelEnvSettings
+    .ctor()
+    Celly.Providers.ITypeAdapter Adapter { get; set; }
+    Celly.Providers.ITypeAdapter get_Adapter()
+    Celly.Providers.ITypeProvider TypeProvider { get; set; }
+    Celly.Providers.ITypeProvider get_TypeProvider()
+    System.Action<Celly.Stdlib.FunctionRegistry> ConfigureFunctions { get; set; }
+    System.Action<Celly.Stdlib.FunctionRegistry> get_ConfigureFunctions()
+    System.Boolean DisableMacros { get; set; }
+    System.Boolean EnableOptionalSyntax { get; set; }
+    System.Boolean get_DisableMacros()
+    System.Boolean get_EnableOptionalSyntax()
+    System.Collections.Generic.IReadOnlyList<Celly.CelLibrary> Libraries { get; set; }
+    System.Collections.Generic.IReadOnlyList<Celly.CelLibrary> get_Libraries()
+    System.Collections.Generic.IReadOnlyList<Celly.Checking.FunctionDecl> FunctionDeclarations { get; set; }
+    System.Collections.Generic.IReadOnlyList<Celly.Checking.FunctionDecl> get_FunctionDeclarations()
+    System.Collections.Generic.IReadOnlyList<Celly.Checking.VariableDecl> Declarations { get; set; }
+    System.Collections.Generic.IReadOnlyList<Celly.Checking.VariableDecl> get_Declarations()
+    System.String Container { get; set; }
+    System.String get_Container()
+    System.Void set_Adapter(Celly.Providers.ITypeAdapter value)
+    System.Void set_ConfigureFunctions(System.Action<Celly.Stdlib.FunctionRegistry> value)
+    System.Void set_Container(System.String value)
+    System.Void set_Declarations(System.Collections.Generic.IReadOnlyList<Celly.Checking.VariableDecl> value)
+    System.Void set_DisableMacros(System.Boolean value)
+    System.Void set_EnableOptionalSyntax(System.Boolean value)
+    System.Void set_FunctionDeclarations(System.Collections.Generic.IReadOnlyList<Celly.Checking.FunctionDecl> value)
+    System.Void set_Libraries(System.Collections.Generic.IReadOnlyList<Celly.CelLibrary> value)
+    System.Void set_TypeProvider(Celly.Providers.ITypeProvider value)
+sealed class Celly.CelLibrary
+    .ctor()
+    System.Action<Celly.Stdlib.FunctionRegistry> Functions { get; set; }
+    System.Action<Celly.Stdlib.FunctionRegistry> get_Functions()
+    System.Collections.Generic.IReadOnlyList<Celly.Checking.FunctionDecl> FunctionDecls { get; set; }
+    System.Collections.Generic.IReadOnlyList<Celly.Checking.FunctionDecl> get_FunctionDecls()
+    System.Collections.Generic.IReadOnlyList<Celly.Checking.VariableDecl> VariableDecls { get; set; }
+    System.Collections.Generic.IReadOnlyList<Celly.Checking.VariableDecl> get_VariableDecls()
+    System.Collections.Generic.IReadOnlyList<Celly.Parsing.Macro> Macros { get; set; }
+    System.Collections.Generic.IReadOnlyList<Celly.Parsing.Macro> get_Macros()
+    System.String Name { get; set; }
+    System.String get_Name()
+    System.Void set_FunctionDecls(System.Collections.Generic.IReadOnlyList<Celly.Checking.FunctionDecl> value)
+    System.Void set_Functions(System.Action<Celly.Stdlib.FunctionRegistry> value)
+    System.Void set_Macros(System.Collections.Generic.IReadOnlyList<Celly.Parsing.Macro> value)
+    System.Void set_Name(System.String value)
+    System.Void set_VariableDecls(System.Collections.Generic.IReadOnlyList<Celly.Checking.VariableDecl> value)
+sealed class Celly.CelParseException : System.Exception, System.Runtime.Serialization.ISerializable
+    .ctor(Celly.Parsing.ParseResult result)
+    Celly.Parsing.ParseResult Result { get; }
+    Celly.Parsing.ParseResult get_Result()
+sealed class Celly.CelProgram
+    Celly.Values.CelValue Eval()
+    Celly.Values.CelValue Eval(Celly.Interpreter.IActivation activation)
+    Celly.Values.CelValue Eval(System.Collections.Generic.IReadOnlyDictionary<System.String, System.Object> bindings)
+static class Celly.CellyInfo
+    const System.String SpecCommit
+sealed class Celly.Checking.CheckResult
+    Celly.Types.CelType TypeOf(Celly.Ast.Expr expr)
+    System.Boolean HasErrors { get; }
+    System.Boolean get_HasErrors()
+    System.Collections.Generic.IReadOnlyDictionary<System.Int64, Celly.Checking.ReferenceInfo> References { get; }
+    System.Collections.Generic.IReadOnlyDictionary<System.Int64, Celly.Checking.ReferenceInfo> get_References()
+    System.Collections.Generic.IReadOnlyDictionary<System.Int64, Celly.Types.CelType> TypeMap { get; }
+    System.Collections.Generic.IReadOnlyDictionary<System.Int64, Celly.Types.CelType> get_TypeMap()
+    System.Collections.Generic.IReadOnlyList<Celly.Common.CelIssue> Issues { get; }
+    System.Collections.Generic.IReadOnlyList<Celly.Common.CelIssue> get_Issues()
+sealed class Celly.Checking.Checker
+    .ctor(Celly.Checking.TypeEnv env, System.String container, Celly.Ast.SourceInfo sourceInfo, Celly.Providers.ITypeProvider provider)
+    Celly.Checking.CheckResult Check(Celly.Ast.Expr expr)
+sealed class Celly.Checking.FunctionDecl
+    .ctor(System.String name, System.Collections.Generic.IReadOnlyList<Celly.Checking.OverloadDecl> overloads)
+    System.Collections.Generic.IReadOnlyList<Celly.Checking.OverloadDecl> Overloads { get; }
+    System.Collections.Generic.IReadOnlyList<Celly.Checking.OverloadDecl> get_Overloads()
+    System.String Name { get; }
+    System.String get_Name()
+sealed class Celly.Checking.OverloadDecl
+    .ctor(System.String id, System.Collections.Generic.IReadOnlyList<Celly.Types.CelType> argTypes, Celly.Types.CelType resultType, System.Boolean isInstance)
+    Celly.Types.CelType ResultType { get; }
+    Celly.Types.CelType get_ResultType()
+    System.Boolean IsInstance { get; }
+    System.Boolean get_IsInstance()
+    System.Collections.Generic.IReadOnlyList<Celly.Types.CelType> ArgTypes { get; }
+    System.Collections.Generic.IReadOnlyList<Celly.Types.CelType> get_ArgTypes()
+    System.String Id { get; }
+    System.String get_Id()
+sealed class Celly.Checking.ReferenceInfo
+    .ctor(System.String name, System.Collections.Generic.IReadOnlyList<System.String> overloadIds)
+    System.Collections.Generic.IReadOnlyList<System.String> OverloadIds { get; }
+    System.Collections.Generic.IReadOnlyList<System.String> get_OverloadIds()
+    System.String Name { get; }
+    System.String get_Name()
+static class Celly.Checking.StandardDecls
+    System.Collections.Generic.Dictionary<System.String, Celly.Checking.FunctionDecl> CreateFunctions()
+    System.Collections.Generic.IEnumerable<Celly.Checking.VariableDecl> CreateIdents()
+sealed class Celly.Checking.TypeEnv
+    .ctor(System.Collections.Generic.Dictionary<System.String, Celly.Checking.FunctionDecl> functions)
+    Celly.Checking.FunctionDecl FindFunction(System.String name)
+    Celly.Checking.TypeEnv NewScope()
+    Celly.Checking.VariableDecl FindRootVariable(System.String name)
+    Celly.Checking.VariableDecl FindScopedVariable(System.String name)
+    Celly.Checking.VariableDecl FindVariable(System.String name)
+    System.Boolean IsRoot { get; }
+    System.Boolean get_IsRoot()
+    System.Void AddVariable(Celly.Checking.VariableDecl decl)
+sealed class Celly.Checking.TypeSubstitution
+    .ctor()
+    Celly.Types.CelType DeepResolve(Celly.Types.CelType type)
+    Celly.Types.CelType Finalize(Celly.Types.CelType type, System.Boolean unboundToDyn)
+    Celly.Types.CelType Join(Celly.Types.CelType a, Celly.Types.CelType b)
+    Celly.Types.CelType Resolve(Celly.Types.CelType type)
+    System.Boolean IsAssignable(Celly.Types.CelType target, Celly.Types.CelType from)
+    System.Boolean IsOptional(Celly.Types.CelType type)
+    System.Boolean IsWrapper(Celly.Types.CelType type)
+    System.Boolean StructuralEquals(Celly.Types.CelType a, Celly.Types.CelType b)
+    System.Collections.Generic.Dictionary<System.String, Celly.Types.CelType> Snapshot()
+    System.Void Restore(System.Collections.Generic.Dictionary<System.String, Celly.Types.CelType> snapshot)
+sealed class Celly.Checking.VariableDecl
+    .ctor(System.String name, Celly.Types.CelType type)
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    System.String Name { get; }
+    System.String get_Name()
+sealed class Celly.Common.CelIssue
+    .ctor(Celly.Common.IssueSeverity severity, Celly.Common.Location location, System.String message)
+    Celly.Common.IssueSeverity Severity { get; }
+    Celly.Common.IssueSeverity get_Severity()
+    Celly.Common.Location Location { get; }
+    Celly.Common.Location get_Location()
+    System.String Message { get; }
+    System.String ToDisplayString(Celly.Common.Source source)
+    System.String get_Message()
+sealed class Celly.Common.ErrorReporter
+    .ctor()
+    System.Boolean HasErrors { get; }
+    System.Boolean get_HasErrors()
+    System.Collections.Generic.IReadOnlyList<Celly.Common.CelIssue> Issues { get; }
+    System.Collections.Generic.IReadOnlyList<Celly.Common.CelIssue> get_Issues()
+    System.Void ReportError(Celly.Common.Location location, System.String message)
+enum Celly.Common.IssueSeverity : System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
+    const Celly.Common.IssueSeverity Error
+    const Celly.Common.IssueSeverity Warning
+    field System.Int32 value__
+struct Celly.Common.Location : System.IEquatable<Celly.Common.Location>
+    .ctor(System.Int32 Line, System.Int32 Column)
+    System.Boolean op_Equality(Celly.Common.Location left, Celly.Common.Location right)
+    System.Boolean op_Inequality(Celly.Common.Location left, Celly.Common.Location right)
+    System.Int32 Column { get; set; }
+    System.Int32 Line { get; set; }
+    System.Int32 get_Column()
+    System.Int32 get_Line()
+    System.Void Deconstruct(ref System.Int32 Line, ref System.Int32 Column)
+    System.Void set_Column(System.Int32 value)
+    System.Void set_Line(System.Int32 value)
+    readonly Celly.Common.Location None
+static class Celly.Common.Operators
+    System.String FindBinary(System.String symbol)
+    const System.String Add
+    const System.String All
+    const System.String Conditional
+    const System.String Divide
+    const System.String Equals
+    const System.String Exists
+    const System.String ExistsOne
+    const System.String Filter
+    const System.String Greater
+    const System.String GreaterEquals
+    const System.String Has
+    const System.String In
+    const System.String Index
+    const System.String Less
+    const System.String LessEquals
+    const System.String LogicalAnd
+    const System.String LogicalNot
+    const System.String LogicalOr
+    const System.String Map
+    const System.String Modulo
+    const System.String Multiply
+    const System.String Negate
+    const System.String NotEquals
+    const System.String NotStrictlyFalse
+    const System.String OptIndex
+    const System.String OptSelect
+    const System.String Subtract
+sealed class Celly.Common.Source
+    Celly.Common.Location LocationOf(System.Int32 offset)
+    Celly.Common.Source FromText(System.String text, System.String description)
+    System.String Description { get; }
+    System.String Snippet(System.Int32 line)
+    System.String Text { get; }
+    System.String get_Description()
+    System.String get_Text()
+static class Celly.Extensions.BindingsLibrary
+    readonly Celly.CelLibrary Instance
+static class Celly.Extensions.BlockLibrary
+    readonly Celly.CelLibrary Instance
+sealed class Celly.Extensions.CidrValue : Celly.Values.CelValue
+    .ctor(System.Net.IPAddress address, System.Int32 prefixLength)
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Int32 PrefixLength { get; }
+    System.Int32 get_PrefixLength()
+    System.Net.IPAddress Address { get; }
+    System.Net.IPAddress get_Address()
+    System.Object ToNative()
+    readonly Celly.Types.CelType CidrType
+static class Celly.Extensions.EncodersLibrary
+    readonly Celly.CelLibrary Instance
+sealed class Celly.Extensions.IpValue : Celly.Values.CelValue
+    .ctor(System.Net.IPAddress address)
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Net.IPAddress Address { get; }
+    System.Net.IPAddress get_Address()
+    System.Object ToNative()
+    readonly Celly.Types.CelType IpType
+static class Celly.Extensions.MathLibrary
+    readonly Celly.CelLibrary Instance
+static class Celly.Extensions.NetworkLibrary
+    readonly Celly.CelLibrary Instance
+static class Celly.Extensions.OptionalsLibrary
+    readonly Celly.CelLibrary Instance
+static class Celly.Extensions.ProtosLibrary
+    readonly Celly.CelLibrary Instance
+static class Celly.Extensions.StringFormatter
+    Celly.Values.CelValue Format(System.String template, System.Collections.Generic.IReadOnlyList<Celly.Values.CelValue> args)
+static class Celly.Extensions.StringsLibrary
+    readonly Celly.CelLibrary Instance
+static class Celly.Extensions.TwoVarComprehensionsLibrary
+    readonly Celly.CelLibrary Instance
+sealed class Celly.Interpreter.EmptyActivation : Celly.Interpreter.IActivation
+    .ctor()
+    System.Boolean TryFind(System.String name, ref Celly.Values.CelValue value)
+    readonly Celly.Interpreter.EmptyActivation Instance
+interface Celly.Interpreter.IActivation
+    System.Boolean TryFind(System.String name, ref Celly.Values.CelValue value)
+interface Celly.Interpreter.IInterpretable
+    Celly.Values.CelValue Eval(Celly.Interpreter.IActivation activation)
+sealed class Celly.Interpreter.MapActivation : Celly.Interpreter.IActivation
+    .ctor(System.Collections.Generic.IReadOnlyDictionary<System.String, System.Object> bindings, Celly.Providers.ITypeAdapter adapter)
+    System.Boolean TryFind(System.String name, ref Celly.Values.CelValue value)
+sealed class Celly.Interpreter.ScopedActivation : Celly.Interpreter.IActivation
+    .ctor(Celly.Interpreter.IActivation parent, System.String name, Celly.Values.CelValue initial)
+    Celly.Interpreter.IActivation Parent { get; }
+    Celly.Interpreter.IActivation Unwrap(Celly.Interpreter.IActivation activation)
+    Celly.Interpreter.IActivation get_Parent()
+    Celly.Values.CelValue Value { get; set; }
+    Celly.Values.CelValue get_Value()
+    System.Boolean TryFind(System.String name1, ref Celly.Values.CelValue value)
+    System.Void set_Value(Celly.Values.CelValue value)
+sealed class Celly.Interpreter.ValueActivation : Celly.Interpreter.IActivation
+    .ctor(System.Collections.Generic.IReadOnlyDictionary<System.String, Celly.Values.CelValue> bindings)
+    System.Boolean TryFind(System.String name, ref Celly.Values.CelValue value)
+sealed class Celly.Parsing.CelParser
+    Celly.Parsing.ParseResult Parse(Celly.Common.Source source, Celly.Parsing.ParserOptions options)
+    Celly.Parsing.ParseResult Parse(System.String expression, Celly.Parsing.ParserOptions options)
+interface Celly.Parsing.IMacroContext
+    Celly.Ast.Expr NewConst(Celly.Ast.CelConstant value)
+    Celly.Ast.Expr NewGlobalCall(System.String function, Celly.Ast.Expr[] args)
+    Celly.Ast.Expr NewIdent(System.String name)
+    Celly.Ast.Expr NewList(Celly.Ast.Expr[] elements)
+    Celly.Ast.Expr ReportError(System.String message)
+    System.Int64 NextId()
+sealed class Celly.Parsing.LexException : System.Exception, System.Runtime.Serialization.ISerializable
+    .ctor(System.Int32 offset, System.String message)
+    System.Int32 Offset { get; }
+    System.Int32 get_Offset()
+sealed class Celly.Parsing.Lexer
+    System.Collections.Generic.List<Celly.Parsing.Token> Tokenize(System.String text)
+sealed class Celly.Parsing.Macro
+    .ctor(System.String function, System.Int32 argCount, System.Boolean receiverStyle, System.Func<Celly.Parsing.IMacroContext, Celly.Ast.Expr, System.Collections.Generic.IReadOnlyList<Celly.Ast.Expr>, Celly.Ast.Expr> expander)
+    Celly.Ast.Expr Expand(Celly.Parsing.IMacroContext ctx, Celly.Ast.Expr target, System.Collections.Generic.IReadOnlyList<Celly.Ast.Expr> args)
+    System.Boolean ReceiverStyle { get; }
+    System.Boolean get_ReceiverStyle()
+    System.Int32 ArgCount { get; }
+    System.Int32 get_ArgCount()
+    System.String Function { get; }
+    System.String get_Function()
+    System.ValueTuple<System.String, System.Int32, System.Boolean> Key { get; }
+    System.ValueTuple<System.String, System.Int32, System.Boolean> get_Key()
+    const System.Int32 VarArg
+sealed class Celly.Parsing.ParseResult
+    Celly.Ast.CelAbstractSyntax Ast { get; }
+    Celly.Ast.CelAbstractSyntax get_Ast()
+    System.Boolean HasErrors { get; }
+    System.Boolean get_HasErrors()
+    System.Collections.Generic.IReadOnlyList<Celly.Common.CelIssue> Issues { get; }
+    System.Collections.Generic.IReadOnlyList<Celly.Common.CelIssue> get_Issues()
+sealed class Celly.Parsing.ParserOptions
+    .ctor()
+    System.Boolean EnableOptionalSyntax { get; set; }
+    System.Boolean get_EnableOptionalSyntax()
+    System.Collections.Generic.IReadOnlyList<Celly.Parsing.Macro> Macros { get; set; }
+    System.Collections.Generic.IReadOnlyList<Celly.Parsing.Macro> get_Macros()
+    System.Int32 MaxExpressionDepth { get; set; }
+    System.Int32 MaxRecursionDepth { get; set; }
+    System.Int32 get_MaxExpressionDepth()
+    System.Int32 get_MaxRecursionDepth()
+    System.Void set_EnableOptionalSyntax(System.Boolean value)
+    System.Void set_Macros(System.Collections.Generic.IReadOnlyList<Celly.Parsing.Macro> value)
+    System.Void set_MaxExpressionDepth(System.Int32 value)
+    System.Void set_MaxRecursionDepth(System.Int32 value)
+    readonly Celly.Parsing.ParserOptions Default
+static class Celly.Parsing.StandardMacros
+    const System.String AccumulatorName
+    readonly System.Collections.Generic.IReadOnlyList<Celly.Parsing.Macro> All
+struct Celly.Parsing.Token
+    .ctor(Celly.Parsing.TokenKind kind, System.Int32 offset, System.Int32 length, System.Object value)
+    Celly.Parsing.TokenKind Kind { get; }
+    Celly.Parsing.TokenKind get_Kind()
+    System.Int32 Length { get; }
+    System.Int32 Offset { get; }
+    System.Int32 get_Length()
+    System.Int32 get_Offset()
+    System.Object Value { get; }
+    System.Object get_Value()
+    System.String Text { get; }
+    System.String get_Text()
+enum Celly.Parsing.TokenKind : System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
+    const Celly.Parsing.TokenKind AndAnd
+    const Celly.Parsing.TokenKind BytesLit
+    const Celly.Parsing.TokenKind Colon
+    const Celly.Parsing.TokenKind Comma
+    const Celly.Parsing.TokenKind Dot
+    const Celly.Parsing.TokenKind DoubleLit
+    const Celly.Parsing.TokenKind EndOfFile
+    const Celly.Parsing.TokenKind EqualsEquals
+    const Celly.Parsing.TokenKind EscapedIdent
+    const Celly.Parsing.TokenKind False
+    const Celly.Parsing.TokenKind Greater
+    const Celly.Parsing.TokenKind GreaterEquals
+    const Celly.Parsing.TokenKind Ident
+    const Celly.Parsing.TokenKind In
+    const Celly.Parsing.TokenKind IntLit
+    const Celly.Parsing.TokenKind LBrace
+    const Celly.Parsing.TokenKind LBracket
+    const Celly.Parsing.TokenKind LParen
+    const Celly.Parsing.TokenKind Less
+    const Celly.Parsing.TokenKind LessEquals
+    const Celly.Parsing.TokenKind Minus
+    const Celly.Parsing.TokenKind Not
+    const Celly.Parsing.TokenKind NotEquals
+    const Celly.Parsing.TokenKind Null
+    const Celly.Parsing.TokenKind OrOr
+    const Celly.Parsing.TokenKind Percent
+    const Celly.Parsing.TokenKind Plus
+    const Celly.Parsing.TokenKind Question
+    const Celly.Parsing.TokenKind RBrace
+    const Celly.Parsing.TokenKind RBracket
+    const Celly.Parsing.TokenKind RParen
+    const Celly.Parsing.TokenKind Reserved
+    const Celly.Parsing.TokenKind Slash
+    const Celly.Parsing.TokenKind Star
+    const Celly.Parsing.TokenKind StringLit
+    const Celly.Parsing.TokenKind True
+    const Celly.Parsing.TokenKind UintLit
+    field System.Int32 value__
+sealed class Celly.Providers.EmptyTypeProvider : Celly.Providers.ITypeProvider
+    .ctor()
+    Celly.Types.CelType FindStructFieldType(System.String messageName, System.String fieldName)
+    Celly.Types.CelType FindStructType(System.String name)
+    Celly.Values.CelValue FindIdent(System.String name)
+    Celly.Values.CelValue NewValue(System.String messageName, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<System.String, Celly.Values.CelValue>> fields)
+    readonly Celly.Providers.EmptyTypeProvider Instance
+interface Celly.Providers.IStructValue
+    Celly.Values.CelValue GetField(System.String name)
+    Celly.Values.CelValue HasField(System.String name)
+interface Celly.Providers.ITypeAdapter
+    Celly.Values.CelValue NativeToValue(System.Object value)
+interface Celly.Providers.ITypeProvider
+    Celly.Types.CelType FindStructFieldType(System.String messageName, System.String fieldName)
+    Celly.Types.CelType FindStructType(System.String name)
+    Celly.Values.CelValue FindIdent(System.String name)
+    Celly.Values.CelValue NewValue(System.String messageName, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<System.String, Celly.Values.CelValue>> fields)
+sealed class Celly.Providers.NativeTypeAdapter : Celly.Providers.ITypeAdapter
+    .ctor()
+    Celly.Values.CelValue NativeToValue(System.Object value)
+    readonly Celly.Providers.NativeTypeAdapter Instance
+sealed class Celly.Providers.NativeTypeProvider : Celly.Providers.ITypeAdapter, Celly.Providers.ITypeProvider
+    .ctor()
+    Celly.Providers.NativeTypeProvider FromTypes(System.Type[] types)
+    Celly.Providers.NativeTypeProvider+NativeObjectValue
+    Celly.Types.CelType FindStructFieldType(System.String messageName, System.String fieldName)
+    Celly.Types.CelType FindStructType(System.String name)
+    Celly.Values.CelValue FindIdent(System.String name)
+    Celly.Values.CelValue NativeToValue(System.Object value)
+    Celly.Values.CelValue NewValue(System.String messageName, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<System.String, Celly.Values.CelValue>> fields)
+    System.String ToSnakeCase(System.String name)
+sealed class Celly.Providers.NativeTypeProvider+NativeObjectValue : Celly.Values.CelValue, Celly.Providers.IStructValue, Celly.Values.IZeroTester
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    Celly.Values.CelValue GetField(System.String name)
+    Celly.Values.CelValue HasField(System.String name)
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Boolean IsZeroValue()
+    System.Object ToNative()
+static class Celly.Stdlib.Conversions
+    Celly.Values.CelValue ToBool(Celly.Values.CelValue value)
+    Celly.Values.CelValue ToBytes(Celly.Values.CelValue value)
+    Celly.Values.CelValue ToDouble(Celly.Values.CelValue value)
+    Celly.Values.CelValue ToInt(Celly.Values.CelValue value)
+    Celly.Values.CelValue ToUint(Celly.Values.CelValue value)
+sealed class Celly.Stdlib.FunctionRegistry
+    .ctor()
+    Celly.Stdlib.FunctionRegistry Clone()
+    System.Func<Celly.Values.CelValue[], Celly.Values.CelValue> Find(System.String name)
+    System.Void Register(System.String name, System.Func<Celly.Values.CelValue[], Celly.Values.CelValue> impl)
+static class Celly.Stdlib.GoDoubleFormatter
+    System.String Format(System.Double value)
+interface Celly.Stdlib.IRegexEngine
+    Celly.Values.CelValue IsMatch(System.String pattern, System.String input)
+sealed class Celly.Stdlib.NonBacktrackingRegexEngine : Celly.Stdlib.IRegexEngine
+    .ctor()
+    Celly.Values.CelValue IsMatch(System.String pattern, System.String input)
+    readonly Celly.Stdlib.NonBacktrackingRegexEngine Instance
+static class Celly.Stdlib.Rfc3339
+    System.Boolean IsLeapYear(System.Int32 year)
+    System.Int32 DaysInMonth(System.Int32 year, System.Int32 month)
+    System.Int64 CivilToEpochSeconds(System.Int32 year, System.Int32 month, System.Int32 day, System.Int32 hour, System.Int32 minute, System.Int32 second)
+    System.Int64 DaysFromCivil(System.Int32 y, System.Int32 m, System.Int32 d)
+    System.Nullable<Celly.Values.CelTimestampData> Parse(System.String s)
+    System.String Format(Celly.Values.CelTimestampData ts)
+    System.ValueTuple<System.Int32, System.Int32, System.Int32, System.Int32, System.Int32, System.Int32> EpochSecondsToCivil(System.Int64 seconds)
+    System.ValueTuple<System.Int32, System.Int32, System.Int32> CivilFromDays(System.Int64 z)
+static class Celly.Stdlib.StandardFunctions
+    Celly.Stdlib.FunctionRegistry CreateRegistry()
+static class Celly.Stdlib.TimeFunctions
+    Celly.Values.CelValue DurationAccessor(Celly.Values.DurationValue d, System.String function)
+    Celly.Values.CelValue ParseDuration(System.String s)
+    Celly.Values.CelValue ParseTimestamp(System.String s)
+    Celly.Values.CelValue TimestampAccessor(Celly.Values.TimestampValue ts, System.String function, System.String timezone)
+    System.String FormatDuration(Celly.Values.CelDurationData d)
+class Celly.Types.CelType
+    .ctor(Celly.Types.CelTypeKind kind, System.String name, System.Collections.Generic.IReadOnlyList<Celly.Types.CelType> parameters)
+    Celly.Types.CelType EnumOf(System.String enumName)
+    Celly.Types.CelType List(Celly.Types.CelType element)
+    Celly.Types.CelType Map(Celly.Types.CelType key, Celly.Types.CelType value)
+    Celly.Types.CelType Opaque(System.String name, Celly.Types.CelType[] parameters)
+    Celly.Types.CelType Optional(Celly.Types.CelType inner)
+    Celly.Types.CelType Struct(System.String messageName)
+    Celly.Types.CelType TypeParam(System.String name)
+    Celly.Types.CelTypeKind Kind { get; }
+    Celly.Types.CelTypeKind get_Kind()
+    System.Boolean RuntimeEquals(Celly.Types.CelType other)
+    System.Collections.Generic.IReadOnlyList<Celly.Types.CelType> Parameters { get; }
+    System.Collections.Generic.IReadOnlyList<Celly.Types.CelType> get_Parameters()
+    System.String Name { get; }
+    System.String get_Name()
+    readonly Celly.Types.CelType Bool
+    readonly Celly.Types.CelType Bytes
+    readonly Celly.Types.CelType Double
+    readonly Celly.Types.CelType Duration
+    readonly Celly.Types.CelType Dyn
+    readonly Celly.Types.CelType Error
+    readonly Celly.Types.CelType Int
+    readonly Celly.Types.CelType ListDyn
+    readonly Celly.Types.CelType MapDyn
+    readonly Celly.Types.CelType Null
+    readonly Celly.Types.CelType OptionalDyn
+    readonly Celly.Types.CelType String
+    readonly Celly.Types.CelType Timestamp
+    readonly Celly.Types.CelType TypeType
+    readonly Celly.Types.CelType Uint
+    readonly Celly.Types.CelType Unknown
+enum Celly.Types.CelTypeKind : System.IComparable, System.IConvertible, System.IFormattable, System.ISpanFormattable
+    const Celly.Types.CelTypeKind Bool
+    const Celly.Types.CelTypeKind Bytes
+    const Celly.Types.CelTypeKind Double
+    const Celly.Types.CelTypeKind Duration
+    const Celly.Types.CelTypeKind Dyn
+    const Celly.Types.CelTypeKind Enum
+    const Celly.Types.CelTypeKind Error
+    const Celly.Types.CelTypeKind Int
+    const Celly.Types.CelTypeKind List
+    const Celly.Types.CelTypeKind Map
+    const Celly.Types.CelTypeKind Null
+    const Celly.Types.CelTypeKind Opaque
+    const Celly.Types.CelTypeKind String
+    const Celly.Types.CelTypeKind Struct
+    const Celly.Types.CelTypeKind Timestamp
+    const Celly.Types.CelTypeKind Type
+    const Celly.Types.CelTypeKind TypeParam
+    const Celly.Types.CelTypeKind Uint
+    const Celly.Types.CelTypeKind Unknown
+    field System.Int32 value__
+sealed class Celly.Values.BoolValue : Celly.Values.CelValue, Celly.Values.IComparableValue
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    Celly.Values.BoolValue Of(System.Boolean value)
+    Celly.Values.CelValue CompareTo(Celly.Values.CelValue other)
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Boolean Value { get; }
+    System.Boolean get_Value()
+    System.Object ToNative()
+    readonly Celly.Values.BoolValue False
+    readonly Celly.Values.BoolValue True
+sealed class Celly.Values.BytesValue : Celly.Values.CelValue, Celly.Values.IAdder, Celly.Values.IComparableValue, Celly.Values.ISizedValue
+    .ctor(System.Byte[] value)
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    Celly.Values.BytesValue Of(System.Byte[] value)
+    Celly.Values.CelValue Add(Celly.Values.CelValue other)
+    Celly.Values.CelValue CompareTo(Celly.Values.CelValue other)
+    Celly.Values.CelValue DecodeUtf8()
+    Celly.Values.CelValue Size()
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Byte[] ToByteArray()
+    System.Object ToNative()
+    System.ReadOnlySpan<System.Byte> Span { get; }
+    System.ReadOnlySpan<System.Byte> get_Span()
+struct Celly.Values.CelDurationData : System.IEquatable<Celly.Values.CelDurationData>
+    .ctor(System.Int64 Seconds, System.Int32 Nanos)
+    System.Boolean InRange { get; }
+    System.Boolean get_InRange()
+    System.Boolean op_Equality(Celly.Values.CelDurationData left, Celly.Values.CelDurationData right)
+    System.Boolean op_Inequality(Celly.Values.CelDurationData left, Celly.Values.CelDurationData right)
+    System.Int32 Nanos { get; set; }
+    System.Int32 get_Nanos()
+    System.Int64 Seconds { get; set; }
+    System.Int64 get_Seconds()
+    System.Void Deconstruct(ref System.Int64 Seconds, ref System.Int32 Nanos)
+    System.Void set_Nanos(System.Int32 value)
+    System.Void set_Seconds(System.Int64 value)
+struct Celly.Values.CelTimestampData : System.IEquatable<Celly.Values.CelTimestampData>
+    .ctor(System.Int64 Seconds, System.Int32 Nanos)
+    System.Boolean InRange { get; }
+    System.Boolean get_InRange()
+    System.Boolean op_Equality(Celly.Values.CelTimestampData left, Celly.Values.CelTimestampData right)
+    System.Boolean op_Inequality(Celly.Values.CelTimestampData left, Celly.Values.CelTimestampData right)
+    System.Int32 Nanos { get; set; }
+    System.Int32 get_Nanos()
+    System.Int64 Seconds { get; set; }
+    System.Int64 get_Seconds()
+    System.Void Deconstruct(ref System.Int64 Seconds, ref System.Int32 Nanos)
+    System.Void set_Nanos(System.Int32 value)
+    System.Void set_Seconds(System.Int64 value)
+    const System.Int64 MaxSeconds
+    const System.Int64 MinSeconds
+abstract class Celly.Values.CelValue
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Boolean IsError { get; }
+    System.Boolean IsUnknown { get; }
+    System.Boolean get_IsError()
+    System.Boolean get_IsUnknown()
+    System.Object ToNative()
+sealed class Celly.Values.ConcatListValue : Celly.Values.ListValue, Celly.Values.IAdder, Celly.Values.IContainsTester, Celly.Values.IIndexerValue, Celly.Values.IIterableValue, Celly.Values.ISizedValue
+sealed class Celly.Values.DoubleValue : Celly.Values.CelValue, Celly.Values.IAdder, Celly.Values.IComparableValue, Celly.Values.IDivider, Celly.Values.IMultiplier, Celly.Values.INegater, Celly.Values.ISubtractor
+    .ctor(System.Double value)
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    Celly.Values.CelValue Add(Celly.Values.CelValue other)
+    Celly.Values.CelValue CompareTo(Celly.Values.CelValue other)
+    Celly.Values.CelValue Divide(Celly.Values.CelValue other)
+    Celly.Values.CelValue Multiply(Celly.Values.CelValue other)
+    Celly.Values.CelValue Negate()
+    Celly.Values.CelValue Subtract(Celly.Values.CelValue other)
+    Celly.Values.DoubleValue Of(System.Double value)
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Double Value { get; }
+    System.Double get_Value()
+    System.Object ToNative()
+sealed class Celly.Values.DurationValue : Celly.Values.CelValue, Celly.Values.IAdder, Celly.Values.IComparableValue, Celly.Values.INegater, Celly.Values.ISubtractor
+    .ctor(Celly.Values.CelDurationData data)
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    Celly.Values.CelDurationData Data { get; }
+    Celly.Values.CelDurationData get_Data()
+    Celly.Values.CelValue Add(Celly.Values.CelValue other)
+    Celly.Values.CelValue CompareTo(Celly.Values.CelValue other)
+    Celly.Values.CelValue Negate()
+    Celly.Values.CelValue Of(System.Int64 seconds, System.Int32 nanos)
+    Celly.Values.CelValue OfNanos(System.Numerics.BigInteger totalNanos)
+    Celly.Values.CelValue Subtract(Celly.Values.CelValue other)
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Numerics.BigInteger TotalNanos { get; }
+    System.Numerics.BigInteger get_TotalNanos()
+    System.Object ToNative()
+sealed class Celly.Values.EnumValue : Celly.Values.CelValue
+    .ctor(Celly.Types.CelType enumType, System.Int64 number)
+    Celly.Types.CelType EnumType { get; }
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_EnumType()
+    Celly.Types.CelType get_Type()
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Int64 Number { get; }
+    System.Int64 get_Number()
+    System.Object ToNative()
+sealed class Celly.Values.ErrorValue : Celly.Values.CelValue
+    .ctor(System.String message)
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    Celly.Values.ErrorValue DivideByZero()
+    Celly.Values.ErrorValue IndexOutOfRange(System.Int64 index)
+    Celly.Values.ErrorValue ModulusByZero()
+    Celly.Values.ErrorValue NoSuchAttribute(System.String name)
+    Celly.Values.ErrorValue NoSuchKey(Celly.Values.CelValue key)
+    Celly.Values.ErrorValue NoSuchOverload()
+    Celly.Values.ErrorValue Overflow()
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Object ToNative()
+    System.String Message { get; }
+    System.String get_Message()
+interface Celly.Values.IAdder
+    Celly.Values.CelValue Add(Celly.Values.CelValue other)
+interface Celly.Values.IComparableValue
+    Celly.Values.CelValue CompareTo(Celly.Values.CelValue other)
+interface Celly.Values.IContainsTester
+    Celly.Values.CelValue Contains(Celly.Values.CelValue element)
+interface Celly.Values.IDivider
+    Celly.Values.CelValue Divide(Celly.Values.CelValue other)
+interface Celly.Values.IIndexerValue
+    Celly.Values.CelValue Get(Celly.Values.CelValue index)
+interface Celly.Values.IIterableValue
+    System.Collections.Generic.IEnumerable<Celly.Values.CelValue> Iterate()
+interface Celly.Values.IModder
+    Celly.Values.CelValue Modulo(Celly.Values.CelValue other)
+interface Celly.Values.IMultiplier
+    Celly.Values.CelValue Multiply(Celly.Values.CelValue other)
+interface Celly.Values.INegater
+    Celly.Values.CelValue Negate()
+interface Celly.Values.ISizedValue
+    Celly.Values.CelValue Size()
+interface Celly.Values.ISubtractor
+    Celly.Values.CelValue Subtract(Celly.Values.CelValue other)
+interface Celly.Values.IZeroTester
+    System.Boolean IsZeroValue()
+sealed class Celly.Values.IntValue : Celly.Values.CelValue, Celly.Values.IAdder, Celly.Values.IComparableValue, Celly.Values.IDivider, Celly.Values.IModder, Celly.Values.IMultiplier, Celly.Values.INegater, Celly.Values.ISubtractor
+    .ctor(System.Int64 value)
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    Celly.Values.CelValue Add(Celly.Values.CelValue other)
+    Celly.Values.CelValue CompareTo(Celly.Values.CelValue other)
+    Celly.Values.CelValue Divide(Celly.Values.CelValue other)
+    Celly.Values.CelValue Modulo(Celly.Values.CelValue other)
+    Celly.Values.CelValue Multiply(Celly.Values.CelValue other)
+    Celly.Values.CelValue Negate()
+    Celly.Values.CelValue Subtract(Celly.Values.CelValue other)
+    Celly.Values.IntValue Of(System.Int64 value)
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Int64 Value { get; }
+    System.Int64 get_Value()
+    System.Object ToNative()
+class Celly.Values.ListValue : Celly.Values.CelValue, Celly.Values.IAdder, Celly.Values.IContainsTester, Celly.Values.IIndexerValue, Celly.Values.IIterableValue, Celly.Values.ISizedValue
+    .ctor(System.Collections.Generic.IReadOnlyList<Celly.Values.CelValue> elements)
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    Celly.Values.CelValue Add(Celly.Values.CelValue other)
+    Celly.Values.CelValue Contains(Celly.Values.CelValue element)
+    Celly.Values.CelValue Get(Celly.Values.CelValue index)
+    Celly.Values.CelValue Size()
+    Celly.Values.ListValue Of(System.Collections.Generic.IReadOnlyList<Celly.Values.CelValue> elements)
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Collections.Generic.IEnumerable<Celly.Values.CelValue> Iterate()
+    System.Collections.Generic.IReadOnlyList<Celly.Values.CelValue> Elements { get; }
+    System.Collections.Generic.IReadOnlyList<Celly.Values.CelValue> get_Elements()
+    System.Object ToNative()
+    readonly Celly.Values.ListValue Empty
+sealed class Celly.Values.MapKeyComparer : System.Collections.Generic.IEqualityComparer<Celly.Values.CelValue>
+    .ctor()
+    readonly Celly.Values.MapKeyComparer Instance
+class Celly.Values.MapValue : Celly.Values.CelValue, Celly.Values.IContainsTester, Celly.Values.IIndexerValue, Celly.Values.IIterableValue, Celly.Values.ISizedValue
+    .ctor(System.Collections.Generic.Dictionary<Celly.Values.CelValue, Celly.Values.CelValue> entries, System.Collections.Generic.List<Celly.Values.CelValue> keyOrder)
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    Celly.Values.CelValue Build(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<Celly.Values.CelValue, Celly.Values.CelValue>> pairs)
+    Celly.Values.CelValue Contains(Celly.Values.CelValue rawKey)
+    Celly.Values.CelValue Get(Celly.Values.CelValue rawKey)
+    Celly.Values.CelValue NormalizeKey(Celly.Values.CelValue key)
+    Celly.Values.CelValue Size()
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Boolean TryGet(Celly.Values.CelValue rawKey, ref Celly.Values.CelValue value)
+    System.Collections.Generic.IEnumerable<Celly.Values.CelValue> Iterate()
+    System.Collections.Generic.IReadOnlyList<Celly.Values.CelValue> Keys { get; }
+    System.Collections.Generic.IReadOnlyList<Celly.Values.CelValue> get_Keys()
+    System.Int32 Count { get; }
+    System.Int32 get_Count()
+    System.Object ToNative()
+    readonly Celly.Values.MapValue Empty
+sealed class Celly.Values.NullValue : Celly.Values.CelValue
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Object ToNative()
+    readonly Celly.Values.NullValue Instance
+static class Celly.Values.NumericCompare
+    System.Int32 Compare(System.Int64 a, System.Int64 b)
+    System.Int32 Compare(System.Int64 a, System.UInt64 b)
+    System.Int32 Compare(System.UInt64 a, System.Int64 b)
+    System.Int32 Compare(System.UInt64 a, System.UInt64 b)
+    System.Nullable<System.Int32> Compare(System.Double a, System.Double b)
+    System.Nullable<System.Int32> Compare(System.Double a, System.Int64 b)
+    System.Nullable<System.Int32> Compare(System.Double a, System.UInt64 b)
+    System.Nullable<System.Int32> Compare(System.Int64 a, System.Double b)
+    System.Nullable<System.Int32> Compare(System.UInt64 a, System.Double b)
+sealed class Celly.Values.OptionalValue : Celly.Values.CelValue
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    Celly.Values.CelValue Value { get; }
+    Celly.Values.CelValue get_Value()
+    Celly.Values.OptionalValue OfValue(Celly.Values.CelValue value)
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Boolean HasValue { get; }
+    System.Boolean get_HasValue()
+    System.Object ToNative()
+    readonly Celly.Values.OptionalValue None
+sealed class Celly.Values.StringValue : Celly.Values.CelValue, Celly.Values.IAdder, Celly.Values.IComparableValue, Celly.Values.ISizedValue
+    .ctor(System.String value)
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    Celly.Values.CelValue Add(Celly.Values.CelValue other)
+    Celly.Values.CelValue CompareTo(Celly.Values.CelValue other)
+    Celly.Values.CelValue Size()
+    Celly.Values.StringValue Of(System.String value)
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Boolean HasSupplementary { get; }
+    System.Boolean get_HasSupplementary()
+    System.Int32 CodePointLength { get; }
+    System.Int32 CompareOrdinalByCodePoint(System.String a, System.String b)
+    System.Int32 get_CodePointLength()
+    System.Object ToNative()
+    System.String Value { get; }
+    System.String get_Value()
+sealed class Celly.Values.TimestampValue : Celly.Values.CelValue, Celly.Values.IAdder, Celly.Values.IComparableValue, Celly.Values.ISubtractor
+    .ctor(Celly.Values.CelTimestampData data)
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    Celly.Values.CelTimestampData Data { get; }
+    Celly.Values.CelTimestampData get_Data()
+    Celly.Values.CelValue Add(Celly.Values.CelValue other)
+    Celly.Values.CelValue CompareTo(Celly.Values.CelValue other)
+    Celly.Values.CelValue Of(System.Int64 seconds, System.Int32 nanos)
+    Celly.Values.CelValue Subtract(Celly.Values.CelValue other)
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Object ToNative()
+sealed class Celly.Values.TypeValue : Celly.Values.CelValue
+    .ctor(Celly.Types.CelType value)
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType Value { get; }
+    Celly.Types.CelType get_Type()
+    Celly.Types.CelType get_Value()
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Object ToNative()
+sealed class Celly.Values.UintValue : Celly.Values.CelValue, Celly.Values.IAdder, Celly.Values.IComparableValue, Celly.Values.IDivider, Celly.Values.IModder, Celly.Values.IMultiplier, Celly.Values.ISubtractor
+    .ctor(System.UInt64 value)
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    Celly.Values.CelValue Add(Celly.Values.CelValue other)
+    Celly.Values.CelValue CompareTo(Celly.Values.CelValue other)
+    Celly.Values.CelValue Divide(Celly.Values.CelValue other)
+    Celly.Values.CelValue Modulo(Celly.Values.CelValue other)
+    Celly.Values.CelValue Multiply(Celly.Values.CelValue other)
+    Celly.Values.CelValue Subtract(Celly.Values.CelValue other)
+    Celly.Values.UintValue Of(System.UInt64 value)
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Object ToNative()
+    System.UInt64 Value { get; }
+    System.UInt64 get_Value()
+sealed class Celly.Values.UnknownValue : Celly.Values.CelValue
+    .ctor(System.Collections.Generic.IReadOnlyList<System.Int64> exprIds)
+    Celly.Types.CelType Type { get; }
+    Celly.Types.CelType get_Type()
+    Celly.Values.UnknownValue Merge(Celly.Values.UnknownValue a, Celly.Values.UnknownValue b)
+    System.Boolean EqualTo(Celly.Values.CelValue other)
+    System.Collections.Generic.IReadOnlyList<System.Int64> ExprIds { get; }
+    System.Collections.Generic.IReadOnlyList<System.Int64> get_ExprIds()
+    System.Object ToNative()

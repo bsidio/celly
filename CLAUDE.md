@@ -50,6 +50,8 @@ tools/vendor-conformance.sh               # refresh vendored cel-spec protos + t
 
 ## Status
 
+**1.0.0 — public API frozen.** The public surface is snapshot-tested against `tests/Celly.Tests/ApiBaselines/PublicApi.Celly.txt`; any change fails CI. To change the API intentionally, regenerate with `CELLY_UPDATE_PUBLIC_API=1 dotnet test` and commit the diff.
+
 **All milestones complete. Conformance: 2456/2456 (100%), `testdata/known-failures.txt` is EMPTY** — any conformance regression fails CI. The suite's `strong_*` enum sections run under strong-enum mode (`ProtoTypeRegistry.FromFiles(strongEnums: true)`); everything else runs the default legacy-enum mode. Milestone history is in `docs/PLAN.md` and the git log (M0–M7).
 
 Extension libraries live in `src/Celly/Extensions/` as `CelLibrary` instances (macros + runtime functions + checker decls registered together via `CelEnvSettings.Libraries`).

@@ -11,7 +11,7 @@ namespace Celly.Interpreter;
 /// logical operators become dedicated absorption nodes, and identifier/select chains carry their
 /// container-qualified candidate names for parse-only (maybe-attribute) resolution.
 /// </summary>
-public sealed class Planner(FunctionRegistry functions, string container, Providers.ITypeProvider provider)
+internal sealed class Planner(FunctionRegistry functions, string container, Providers.ITypeProvider provider)
 {
     internal static readonly Dictionary<string, CelValue> TypeIdents = new()
     {
@@ -278,7 +278,7 @@ public sealed class Planner(FunctionRegistry functions, string container, Provid
 }
 
 /// <summary>AST constant → runtime value materialization.</summary>
-public static class Constants
+internal static class Constants
 {
     public static CelValue ToValue(CelConstant constant) => constant.Kind switch
     {
