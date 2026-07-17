@@ -516,7 +516,7 @@ public sealed class Lexer
             case '\'': return ('\'', 1);
             case '`': return ('`', 1);
             case 'x' or 'X':
-                return (ParseHex(content, i + 1, 2, offset), 3);
+                return ((int)ParseHex(content, i + 1, 2, offset), 3);
             case 'u' when allowUnicode:
                 return (ValidateCodePoint(ParseHex(content, i + 1, 4, offset), offset + i), 5);
             case 'U' when allowUnicode:
@@ -533,18 +533,19 @@ public sealed class Lexer
         }
     }
 
-    private static int ParseHex(string content, int i, int count, int offset)
+    // Accumulates into a long: an 8-digit \U escape can reach 0xFFFFFFFF, which overflows int.
+    private static long ParseHex(string content, int i, int count, int offset)
     {
         if (i + count > content.Length)
         {
             throw new LexException(offset + i, "invalid hex escape: too few digits");
         }
 
-        var value = 0;
+        var value = 0L;
         for (var k = 0; k < count; k++)
         {
             var c = content[i + k];
-            int digit = c switch
+            long digit = c switch
             {
                 >= '0' and <= '9' => c - '0',
                 >= 'a' and <= 'f' => c - 'a' + 10,
@@ -557,7 +558,7 @@ public sealed class Lexer
         return value;
     }
 
-    private static int ValidateCodePoint(int value, int offset)
+    private static int ValidateCodePoint(long value, int offset)
     {
         if (value is >= 0xD800 and <= 0xDFFF)
         {
@@ -569,6 +570,6 @@ public sealed class Lexer
             throw new LexException(offset, "invalid unicode escape: code point out of range");
         }
 
-        return value;
+        return (int)value;
     }
 }

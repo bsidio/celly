@@ -54,7 +54,12 @@ public static class StringFormatter
                     return new ErrorValue("could not parse formatting clause: invalid precision");
                 }
 
-                precision = int.Parse(template[start..i], CultureInfo.InvariantCulture);
+                if (!int.TryParse(template[start..i], NumberStyles.None, CultureInfo.InvariantCulture, out precision)
+                    || precision > 512)
+                {
+                    // Cap precision: hostile "%.999999999f" must not allocate unbounded output.
+                    return new ErrorValue("could not parse formatting clause: precision out of range");
+                }
             }
 
             var verb = template[i];

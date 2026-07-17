@@ -8,8 +8,17 @@ public sealed class ParserOptions
 {
     public static readonly ParserOptions Default = new();
 
-    /// <summary>Maximum expression nesting depth (spec minimum capacity is 12; cel-go default is 250).</summary>
+    /// <summary>Maximum parser recursion depth (spec minimum capacity is 12; cel-go default is 250).</summary>
     public int MaxRecursionDepth { get; init; } = 250;
+
+    /// <summary>
+    /// Maximum AST depth (spine length). Bounds the recursion of the later checker/planner/
+    /// evaluator over the parsed tree. Operator chains parse iteratively, so a very long flat
+    /// chain (<c>1+1+…</c>) yields a shallow parser recursion but a deep AST; this cap keeps such
+    /// input from overflowing the stack downstream. Far above the spec minimums and any real
+    /// expression.
+    /// </summary>
+    public int MaxExpressionDepth { get; init; } = 1000;
 
     /// <summary>Enables optional-syntax parsing: <c>a.?b</c>, <c>a[?b]</c>, <c>[?e]</c>, <c>{?k: v}</c>.</summary>
     public bool EnableOptionalSyntax { get; init; } = true;
@@ -100,7 +109,37 @@ public sealed class CelParser
             throw Abort($"unexpected token {Describe(Current)} after expression");
         }
 
+        // Reject over-deep ASTs before they reach the (recursive) checker/planner/evaluator.
+        // Computed iteratively so the check itself cannot overflow.
+        var depth = MaxDepth(expr);
+        if (depth > _options.MaxExpressionDepth)
+        {
+            throw new ParseAbortException(0, $"expression depth limit exceeded: {depth} > {_options.MaxExpressionDepth}");
+        }
+
         return expr;
+    }
+
+    private static int MaxDepth(Expr root)
+    {
+        var max = 0;
+        var stack = new Stack<(Expr Node, int Depth)>();
+        stack.Push((root, 1));
+        while (stack.Count > 0)
+        {
+            var (node, depth) = stack.Pop();
+            if (depth > max)
+            {
+                max = depth;
+            }
+
+            foreach (var child in Ast.AstTools.Children(node))
+            {
+                stack.Push((child, depth + 1));
+            }
+        }
+
+        return max;
     }
 
     // ---- token helpers -------------------------------------------------------------------------
