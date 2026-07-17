@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>audit</AssemblyName>
+  </PropertyGroup>
+  <!-- Celly straight from NuGet — NOT a local project reference. Proves the shipped artifact. -->
+  <ItemGroup>
+    <PackageReference Include="Celly" Version="1.1.0" />
+    <PackageReference Include="Celly.Protobuf" Version="1.1.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.31.1" />
+    <PackageReference Include="Grpc.Tools" Version="2.72.0" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="../../proto/cel/expr/conformance/test/simple.proto" ProtoRoot="../../proto" GrpcServices="None" />
+    <Protobuf Include="../../proto/cel/expr/conformance/proto2/test_all_types.proto" ProtoRoot="../../proto" GrpcServices="None" />
+    <Protobuf Include="../../proto/cel/expr/conformance/proto2/test_all_types_extensions.proto" ProtoRoot="../../proto" GrpcServices="None" />
+    <Protobuf Include="../../proto/cel/expr/conformance/proto3/test_all_types.proto" ProtoRoot="../../proto" GrpcServices="None" />
+  </ItemGroup>
+</Project>

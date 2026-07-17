@@ -15,3 +15,7 @@ benchmarks/celgo/*.test
 
 # Differential harness build output
 tools/differential/celgo/celgodiff
+
+# Independent audit generated artifacts
+tools/independent-audit/pygen/
+tools/independent-audit/binpb/
