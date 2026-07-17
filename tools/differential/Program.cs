@@ -92,6 +92,7 @@ internal static class Program
             new VariableDecl("ls", CelType.List(CelType.String)),
             new VariableDecl("m", CelType.Map(CelType.String, CelType.Int)),
         ],
+        Libraries = [Celly.Extensions.StringsLibrary.Instance],
     });
 
     private static Dictionary<string, object?> FixedBindings() => new()

@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/google/cel-go/cel"
+	"github.com/google/cel-go/ext"
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/common/types/ref"
 	"github.com/google/cel-go/common/types/traits"
@@ -30,6 +31,7 @@ func env() *cel.Env {
 		cel.Variable("li", cel.ListType(cel.IntType)),
 		cel.Variable("ls", cel.ListType(cel.StringType)),
 		cel.Variable("m", cel.MapType(cel.StringType, cel.IntType)),
+		ext.Strings(),
 	)
 	if err != nil {
 		panic(err)

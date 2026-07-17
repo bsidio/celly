@@ -72,6 +72,36 @@ string into a reusable `CelProgram`.
 - cel-go's `Program.Eval` returns `(ref.Val, EvalDetails, error)`; the benchmark uses the
   standard fast path and ignores details, matching typical usage.
 
+## Scale, memory & GC
+
+Measured on the same laptop under **Server GC** (`DOTNET_gcServer=1`), sustained parallel
+load (`tests/Celly.Benchmarks -- throughput`):
+
+| Workload | Aggregate throughput | Gen2 collections | Memory after load |
+|---|--:|--:|--:|
+| Simple (50M evals, 12 threads) | ~7–10 M evals/sec | ~1–2 | **returns to baseline** |
+| Comprehension (5M evals, 12 threads) | ~150 K evals/sec | ~1–3 | **returns to baseline** |
+
+What these say:
+
+- **No leaks.** After tens of millions of evaluations, forcing a full GC returns memory to
+  its ~0.2 MB baseline. The soak tests assert this as a CI gate.
+- **No promotion pathology under Server GC.** Gen2 collections stay in the low single
+  digits across millions of evals — allocations are short-lived and die in Gen0, nothing
+  accumulates. (Under the default *Workstation* GC, high-allocation parallel load will
+  promote-then-collect more; use Server GC for server workloads.)
+- **No lock contention.** The eval path has no locks; a compiled program is safe to share
+  across threads (verified by the concurrency tests).
+
+**On multi-core scaling, be realistic.** Simple-eval throughput scales from 1→2 threads
+but flattens beyond a few cores on this heterogeneous-core laptop (P-cores downclock as a
+cluster; E-cores are slower; and simple eval is allocation-bound — `CallEval` allocates a
+small argument array per call). The practical takeaway: single-process throughput
+(millions of simple evals/sec, ~150 K comprehension evals/sec) is **orders of magnitude
+above what a policy workload demands**, and you scale horizontally (more processes/pods) in
+production anyway. If a single process ever became eval-bound, reducing per-call allocation
+behind the `IInterpretable` seam is the lever.
+
 ## If you need more speed
 
 The `IInterpretable` plan tree is a deliberate seam. Celly does no bytecode/IL compilation

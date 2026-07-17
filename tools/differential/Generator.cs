@@ -175,13 +175,23 @@ public sealed class Generator(int seed)
             };
         }
 
-        return _random.Next(3) switch
+        return _random.Next(9) switch
         {
             0 => $"({GenString(depth + 1, iterVar, false)} + {GenString(depth + 1, iterVar, true)})",
             1 => $"string({GenInt(depth + 1, iterVar, true)})",
-            _ => $"string({GenBool(depth + 1, iterVar, true)})",
+            2 => $"string({GenBool(depth + 1, iterVar, true)})",
+            // string(double) — where a large/small-magnitude formatting bug once hid.
+            3 => $"string({GenDouble(depth + 1, iterVar, true)})",
+            // strings extension functions.
+            4 => $"{GenString(depth + 1, iterVar, true)}.substring({GenSmallIndex()})",
+            5 => $"{GenString(depth + 1, iterVar, true)}.replace({GenString(depth + 1, iterVar, true)}, {GenString(depth + 1, iterVar, true)})",
+            6 => $"{GenString(depth + 1, iterVar, true)}.lowerAscii()",
+            7 => $"{GenString(depth + 1, iterVar, true)}.upperAscii()",
+            _ => $"[{GenString(depth + 1, iterVar, true)}, {GenString(depth + 1, iterVar, true)}].join('-')",
         };
     }
+
+    private string GenSmallIndex() => _random.Next(0, 6).ToString(CultureInfo.InvariantCulture);
 
     private string GenListInt(int depth, string? iterVar, bool atom)
     {
