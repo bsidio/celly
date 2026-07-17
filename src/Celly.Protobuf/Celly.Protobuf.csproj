@@ -5,6 +5,7 @@
     <IsPackable>true</IsPackable>
     <PackageId>Celly.Protobuf</PackageId>
     <Description>Protobuf integration for Celly (CEL for .NET): message types, well-known types, enums, and cel.expr AST interop.</Description>
+    <PackageTags>cel;common-expression-language;expression;expression-evaluator;evaluator;protobuf;google-protobuf;protocol-buffers;proto;proto2;proto3;well-known-types;rules-engine;policy;authorization;validation;dotnet;csharp</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

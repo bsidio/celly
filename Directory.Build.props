@@ -20,7 +20,7 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/bsidio/celly</RepositoryUrl>
     <PackageProjectUrl>https://github.com/bsidio/celly</PackageProjectUrl>
-    <PackageTags>cel;common-expression-language;expression;evaluator;parser</PackageTags>
+    <PackageTags>cel;common-expression-language;expression;expression-language;expression-evaluator;evaluator;interpreter;parser;compiler;type-checker;rules-engine;rule-engine;policy;policy-engine;authorization;validation;scripting;conformance;google;dotnet;csharp</PackageTags>
     <Description>Native C# implementation of the Common Expression Language (CEL).</Description>
     <IsPackable>false</IsPackable>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
