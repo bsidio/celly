@@ -7,7 +7,12 @@
     <Description>Native C# implementation of the Common Expression Language (CEL): parser, type checker, and evaluator with zero dependencies.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IsAotCompatible>true</IsAotCompatible>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
 
   <!-- Core must remain dependency-free: no PackageReference items allowed here. -->
 

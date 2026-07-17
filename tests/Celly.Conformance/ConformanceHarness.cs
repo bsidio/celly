@@ -20,16 +20,33 @@ public static class ConformanceHarness
         Cel.Expr.Conformance.Proto2.TestAllTypesExtensionsReflection.Descriptor,
         Cel.Expr.Conformance.Proto3.TestAllTypesReflection.Descriptor);
 
-    public static void Run(SimpleTest test)
+    /// <summary>
+    /// Strong-enum-mode registry: the suite's "strong_*" sections re-run the shared enum
+    /// expressions under the documented alternate semantics (enums as distinct types), so those
+    /// sections run with the mode they describe enabled.
+    /// </summary>
+    public static readonly ProtoTypeRegistry StrongRegistry = ProtoTypeRegistry.FromFiles(
+        strongEnums: true,
+        Cel.Expr.Conformance.Proto2.TestAllTypesReflection.Descriptor,
+        Cel.Expr.Conformance.Proto2.TestAllTypesExtensionsReflection.Descriptor,
+        Cel.Expr.Conformance.Proto3.TestAllTypesReflection.Descriptor);
+
+    private static readonly CelLibrary StrongEnumLibrary = StrongRegistry.CreateEnumConversionLibrary();
+
+    public static void Run(SimpleTest test) => Run(test, strongEnums: false);
+
+    public static void Run(SimpleTest test, bool strongEnums)
     {
+        var registry = strongEnums ? StrongRegistry : Registry;
         var env = CelEnv.Create(new CelEnvSettings
         {
             Container = test.Container,
             DisableMacros = test.DisableMacros,
-            TypeProvider = Registry,
-            Adapter = Registry,
+            TypeProvider = registry,
+            Adapter = registry,
             Libraries =
             [
+                .. strongEnums ? new[] { StrongEnumLibrary } : [],
                 Celly.Extensions.OptionalsLibrary.Instance,
                 Celly.Extensions.BindingsLibrary.Instance,
                 Celly.Extensions.BlockLibrary.Instance,
@@ -103,12 +120,12 @@ public static class ConformanceHarness
         }
 
         var program = env.Program(parsed.Ast);
-        var result = program.Eval(BuildActivation(test));
+        var result = program.Eval(BuildActivation(test, registry));
 
         switch (test.ResultMatcherCase)
         {
             case SimpleTest.ResultMatcherOneofCase.Value:
-                AssertValue(ValueConverter.ToCelValue(test.Value, Registry), result, test);
+                AssertValue(ValueConverter.ToCelValue(test.Value, registry), result, test);
                 break;
 
             case SimpleTest.ResultMatcherOneofCase.TypedResult:
@@ -118,7 +135,7 @@ public static class ConformanceHarness
                     throw new NotSupportedException("typed_result without result requires the M4 checker");
                 }
 
-                AssertValue(ValueConverter.ToCelValue(test.TypedResult.Result, Registry), result, test);
+                AssertValue(ValueConverter.ToCelValue(test.TypedResult.Result, registry), result, test);
                 break;
 
             case SimpleTest.ResultMatcherOneofCase.EvalError:
@@ -165,7 +182,7 @@ public static class ConformanceHarness
                     o.IsInstanceFunction)),
             ]);
 
-    private static IActivation BuildActivation(SimpleTest test)
+    private static IActivation BuildActivation(SimpleTest test, ProtoTypeRegistry registry)
     {
         if (test.Bindings.Count == 0)
         {
@@ -177,7 +194,7 @@ public static class ConformanceHarness
         {
             bindings[name] = exprValue.KindCase switch
             {
-                ExprValue.KindOneofCase.Value => ValueConverter.ToCelValue(exprValue.Value, Registry),
+                ExprValue.KindOneofCase.Value => ValueConverter.ToCelValue(exprValue.Value, registry),
                 _ => throw new NotSupportedException($"unsupported binding kind: {exprValue.KindCase}"),
             };
         }
@@ -227,6 +244,9 @@ public static class ResultMatcher
                 return e.Span.SequenceEqual(a.Span);
             case (TypeValue e, TypeValue a):
                 return string.Equals(e.Value.Name, a.Value.Name, StringComparison.Ordinal);
+            case (Celly.Values.EnumValue e, Celly.Values.EnumValue a):
+                return string.Equals(e.EnumType.Name, a.EnumType.Name, StringComparison.Ordinal)
+                    && e.Number == a.Number;
             case (TimestampValue e, TimestampValue a):
                 return e.Data == a.Data;
             case (DurationValue e, DurationValue a):

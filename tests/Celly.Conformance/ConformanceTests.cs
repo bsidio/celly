@@ -30,7 +30,8 @@ public class ConformanceTests
         Exception? failure = null;
         try
         {
-            ConformanceHarness.Run(test);
+            // The strong_* sections document the strong-enum mode; run them with it enabled.
+            ConformanceHarness.Run(test, strongEnums: caseId.Contains("/strong_", StringComparison.Ordinal));
         }
         catch (Exception ex)
         {

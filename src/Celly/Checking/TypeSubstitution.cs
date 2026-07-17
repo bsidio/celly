@@ -90,6 +90,13 @@ public sealed class TypeSubstitution
             return true;
         }
 
+        // Strong-mode enums interoperate with int (assignment/comparison in both directions).
+        if ((target.Kind == CelTypeKind.Enum && from.Kind == CelTypeKind.Int)
+            || (target.Kind == CelTypeKind.Int && from.Kind == CelTypeKind.Enum))
+        {
+            return true;
+        }
+
         // Wrapper types interoperate with their primitive: wrapper(int) ↔ int.
         if (IsWrapper(target) && !IsWrapper(from))
         {

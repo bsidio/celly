@@ -6,7 +6,12 @@
     <PackageId>Celly.Protobuf</PackageId>
     <Description>Protobuf integration for Celly (CEL for .NET): message types, well-known types, enums, and cel.expr AST interop.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../Celly/Celly.csproj" />

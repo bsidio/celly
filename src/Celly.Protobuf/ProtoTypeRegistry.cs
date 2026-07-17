@@ -20,9 +20,14 @@ public sealed class ProtoTypeRegistry : ITypeProvider, ITypeAdapter
     private TypeRegistry _anyRegistry = TypeRegistry.Empty;
     private ExtensionRegistry _extensionRegistry = [];
 
-    public static ProtoTypeRegistry FromFiles(params FileDescriptor[] files)
+    /// <summary>Strong-enum mode: enum values are distinct named types instead of ints.</summary>
+    public bool StrongEnums { get; private init; }
+
+    public static ProtoTypeRegistry FromFiles(params FileDescriptor[] files) => FromFiles(false, files);
+
+    public static ProtoTypeRegistry FromFiles(bool strongEnums, params FileDescriptor[] files)
     {
-        var registry = new ProtoTypeRegistry();
+        var registry = new ProtoTypeRegistry { StrongEnums = strongEnums };
         // Well-known types are always available.
         registry.RegisterFile(Wkt.Timestamp.Descriptor.File);
         registry.RegisterFile(Wkt.Duration.Descriptor.File);
@@ -105,12 +110,68 @@ public sealed class ProtoTypeRegistry : ITypeProvider, ITypeAdapter
 
     private void RegisterEnum(EnumDescriptor enumType)
     {
-        // The enum type name itself is a type ident (CEL enums are ints).
-        _idents[enumType.FullName] = new TypeValue(CelType.Int);
+        // Legacy mode: enum constants are ints and the type ident aliases int.
+        // Strong mode: constants are EnumValues of a distinct named type.
+        var celType = StrongEnums ? CelType.EnumOf(enumType.FullName) : CelType.Int;
+        _idents[enumType.FullName] = new TypeValue(celType);
         foreach (var value in enumType.Values)
         {
-            _idents[$"{enumType.FullName}.{value.Name}"] = IntValue.Of(value.Number);
+            _idents[$"{enumType.FullName}.{value.Name}"] = StrongEnums
+                ? new EnumValue(celType, value.Number)
+                : IntValue.Of(value.Number);
         }
+
+        _enums[enumType.FullName] = enumType;
+    }
+
+    private readonly Dictionary<string, EnumDescriptor> _enums = new(StringComparer.Ordinal);
+
+    /// <summary>Enum conversion functions (strong mode): EnumName(int|string) -> enum value.</summary>
+    public CelLibrary CreateEnumConversionLibrary()
+    {
+        var enums = _enums.Values.ToList();
+        return new CelLibrary
+        {
+            Name = "strong-enums",
+            Functions = registry =>
+            {
+                foreach (var enumType in enums)
+                {
+                    var descriptor = enumType;
+                    var celType = CelType.EnumOf(descriptor.FullName);
+                    registry.Register(descriptor.FullName, args => args switch
+                    {
+                        [IntValue i] when i.Value is < int.MinValue or > int.MaxValue => new ErrorValue("range error"),
+                        [IntValue i] => new EnumValue(celType, i.Value),
+                        [StringValue s] => descriptor.FindValueByName(s.Value) is { } byName
+                            ? new EnumValue(celType, byName.Number)
+                            : new ErrorValue($"invalid enum value name '{s.Value}'"),
+                        [EnumValue e] => e,
+                        _ => ErrorValue.NoSuchOverload(),
+                    });
+                }
+            },
+            FunctionDecls =
+            [
+                .. enums.Select(e => new Celly.Checking.FunctionDecl(e.FullName,
+                [
+                    new Celly.Checking.OverloadDecl(e.FullName + "_int", [CelType.Int], CelType.EnumOf(e.FullName)),
+                    new Celly.Checking.OverloadDecl(e.FullName + "_string", [CelType.String], CelType.EnumOf(e.FullName)),
+                ])),
+                // Strong mode restores int(enum).
+                new Celly.Checking.FunctionDecl("int",
+                [
+                    .. enums.Select(e => new Celly.Checking.OverloadDecl(
+                        "enum_to_int_" + e.FullName, [CelType.EnumOf(e.FullName)], CelType.Int)),
+                ]),
+            ],
+        };
+    }
+
+    private static bool IsClosed(EnumDescriptor descriptor)
+    {
+        var syntax = descriptor.File.ToProto().Syntax;
+        return string.IsNullOrEmpty(syntax) || syntax == "proto2";
     }
 
     // ---- ITypeProvider ---------------------------------------------------------------------------
@@ -186,7 +247,7 @@ public sealed class ProtoTypeRegistry : ITypeProvider, ITypeAdapter
         FieldType.Bool => CelType.Bool,
         FieldType.String => CelType.String,
         FieldType.Bytes => CelType.Bytes,
-        FieldType.Enum => CelType.Int,
+        FieldType.Enum => StrongEnums ? CelType.EnumOf(field.EnumType.FullName) : CelType.Int,
         FieldType.Message or FieldType.Group =>
             StructTypeFor(field.MessageType.FullName) ?? CelType.Struct(field.MessageType.FullName),
         _ => CelType.Dyn,
@@ -398,6 +459,11 @@ public sealed class ProtoTypeRegistry : ITypeProvider, ITypeAdapter
                 return null;
             case FieldType.Enum:
             {
+                if (value is EnumValue strongEnum)
+                {
+                    value = IntValue.Of(strongEnum.Number);
+                }
+
                 if (value is not IntValue enumValue)
                 {
                     return ErrorValue.NoSuchOverload();
@@ -822,7 +888,9 @@ public sealed class ProtoTypeRegistry : ITypeProvider, ITypeAdapter
         FieldType.Bool => BoolValue.Of((bool)raw!),
         FieldType.String => StringValue.Of((string)raw!),
         FieldType.Bytes => BytesValue.Of(((ByteString)raw!).ToByteArray()),
-        FieldType.Enum => IntValue.Of(System.Convert.ToInt32(raw, System.Globalization.CultureInfo.InvariantCulture)),
+        FieldType.Enum => StrongEnums
+            ? new EnumValue(CelType.EnumOf(field.EnumType.FullName), System.Convert.ToInt32(raw, System.Globalization.CultureInfo.InvariantCulture))
+            : IntValue.Of(System.Convert.ToInt32(raw, System.Globalization.CultureInfo.InvariantCulture)),
         // Wrapper-typed elements surface as boxed primitives (or null) through reflection.
         FieldType.Message or FieldType.Group => raw switch
         {

@@ -2,50 +2,68 @@
 
 **A native C#/.NET implementation of Google's [Common Expression Language (CEL)](https://github.com/cel-expr/cel-spec).**
 
-Celly is written from scratch in pure managed C# — no WASM shims, no Go-compiled artifacts, no native library bindings. It aims for *complete* spec support, proven by the official cel-spec conformance suite (all 29 test files).
+Celly is written from scratch in pure managed C# — no WASM shims, no Go-compiled artifacts, no native library bindings.
 
-> ⚠️ **Status: pre-release, under active development.** See [Roadmap](#roadmap) for current progress.
+> ✅ **Conformance: 2,456 / 2,456 (100%)** of the official cel-spec conformance suite
+> (30 testdata files, pinned @ [`59505c1`](https://github.com/cel-expr/cel-spec/commit/59505c14f3187e6eb9684fbd3d07146f614c6148)), verified in CI on Linux, Windows, and macOS.
 
 ## Why Celly?
 
-CEL is the expression language behind Kubernetes admission policies (ValidatingAdmissionPolicy), Envoy RBAC, Google Cloud IAM conditions, gRPC protovalidate, and more. Official implementations exist for Go, C++, Java, and Rust — but not .NET. Existing .NET options are partial ports without conformance coverage. Celly's goal is a first-class, conformance-passing native implementation.
+CEL is the expression language behind Kubernetes admission policies (ValidatingAdmissionPolicy), Envoy RBAC, Google Cloud IAM conditions, gRPC protovalidate, and more. Official implementations exist for Go, C++, Java, and Rust — but not .NET. Celly fills that gap with a conformance-verified native implementation.
 
 ```csharp
-var env = CelEnv.NewEnv(
-    CelEnvOptions.Variable("request", CelType.Map(CelType.String, CelType.Dyn)));
+using Celly;
+using Celly.Checking;
+using Celly.Types;
 
-var result = env.Compile("request.user.startsWith('admin-') && size(request.groups) > 0");
-var program = env.Program(result.Ast);
-
-CelValue output = program.Eval(Activation.Of(new Dictionary<string, object>
+var env = CelEnv.Create(new CelEnvSettings
 {
-    ["request"] = new Dictionary<string, object>
+    Declarations =
+    [
+        new VariableDecl("request", CelType.Map(CelType.String, CelType.Dyn)),
+    ],
+});
+
+var program = env.Compile("request.user.startsWith('admin-') && size(request.groups) > 0");
+
+var result = program.Eval(new Dictionary<string, object?>
+{
+    ["request"] = new Dictionary<string, object?>
     {
         ["user"] = "admin-alice",
         ["groups"] = new[] { "ops" },
     },
-}));
-// output => BoolValue.True
+});
+// result => BoolValue.True
 ```
 
 ## Packages
 
 | Package | Contents | Dependencies |
 |---|---|---|
-| `Celly` | Lexer, parser, macros, type checker, evaluator, standard library, extensions (strings, math, encoders, lists, sets, bindings, optionals, …) | **None** |
-| `Celly.Protobuf` | Protobuf type support: message construction & field access, well-known types (Timestamp/Duration/Struct/Any/wrappers), enums, proto2 extensions, AST ↔ `cel.expr` proto conversion | `Celly`, `Google.Protobuf` |
+| `Celly` | Lexer, parser, macros, type checker, evaluator, standard library, all extension libraries | **None** |
+| `Celly.Protobuf` | Protobuf types: message construction & field access, well-known types (Timestamp/Duration/Struct/Any/wrappers), enums (legacy int and strong modes), proto2 extensions | `Celly`, `Google.Protobuf` |
 
-Use `Celly` alone to evaluate expressions over .NET dictionaries/lists/primitives; add `Celly.Protobuf` when your data is protobuf messages or you need full spec semantics for proto-defined types.
+Use `Celly` alone to evaluate expressions over .NET dictionaries/lists/primitives; add `Celly.Protobuf` when your data is protobuf messages.
 
-## Design highlights
+## Feature checklist
 
-- **Hand-written lexer & recursive-descent parser** — zero build-time dependencies, precise error positions, spec capacity guarantees.
-- **cel-go-shaped API**: immutable, thread-safe `CelEnv` → `Compile` (parse + typecheck) → `CelProgram` → `Eval(activation)`. Programs are reusable and safe for concurrent evaluation.
-- **Plan-based interpreter**: the AST compiles to an interpretable tree with overload pre-binding, constant folding, and compiled-regex caching.
-- **Spec-faithful semantics**: cross-type numeric comparisons, commutative error-absorbing `&&`/`||`, Unicode code-point string operations, nanosecond-precision timestamps/durations, Go-compatible `string(double)` formatting.
-- **RE2-compatible `matches()`** via `System.Text.RegularExpressions` `NonBacktracking` mode (linear-time guarantee), pluggable through `IRegexEngine`.
-- **Errors as values**: evaluation never throws for CEL-level errors; unknowns and partial evaluation are supported for attribute-driven use cases.
-- **Conformance-first testing**: the official cel-spec test suite runs in CI from day one with a ratcheting known-failures list — progress is monotonic and verifiable.
+- **Full standard library**: operators with CEL semantics (checked int64/uint64 arithmetic, cross-type numeric comparisons, IEEE doubles), `size`/`in`/indexing, all type conversions with Go-compatible formatting, RE2-semantics `matches()` (via .NET's linear-time NonBacktracking engine), nanosecond-precision timestamps/durations with IANA timezone accessors
+- **Macros**: `has`, `all`, `exists`, `exists_one`, `map`, `filter` (+ two-variable comprehensions)
+- **Type checker**: gradual typing with `dyn`, parameterized-type unification, container (`C.name`) resolution, comprehension-variable shadowing per spec
+- **Optionals**: `optional.of/ofNonZeroValue/none`, `a.?b`, `a[?b]`, `[?e]`, `{?k: v}`, `orValue`, `optMap`/`optFlatMap`, full optional chaining
+- **Extension libraries** (opt-in via `CelEnvSettings.Libraries`): strings (incl. `format` and `strings.quote`), math, encoders (base64), bindings (`cel.bind`), block (`cel.block`), two-var comprehensions, proto2 extensions (`proto.getExt/hasExt`), networking (`net.IP`/`net.CIDR`)
+- **Protobuf**: message construction with WKT collapse (wrappers → primitives, Struct/Value/ListValue → map/dyn/list), Any pack/unpack with bytewise fallback, presence-aware field-wise message equality, proto2 extension fields, **strong-enum mode** (`ProtoTypeRegistry.FromFiles(strongEnums: true, …)`) where enums are distinct named types — an opt-in the reference Go implementation doesn't offer
+- **Thread safety**: `CelEnv` and `CelProgram` are immutable; programs are safe for concurrent evaluation
+
+```csharp
+// Extensions are opt-in libraries:
+var env = CelEnv.Create(new CelEnvSettings
+{
+    Libraries = [Celly.Extensions.StringsLibrary.Instance, Celly.Extensions.MathLibrary.Instance],
+});
+env.Compile("'%d apples'.format([math.greatest(3, 7, 5)])").Eval(); // "7 apples"
+```
 
 ## Building
 
@@ -57,25 +75,12 @@ dotnet test                          # unit + conformance suites
 tools/vendor-conformance.sh          # re-vendor cel-spec protos/testdata (pinned commit)
 ```
 
-## Conformance
+## Conformance methodology
 
-Celly vendors the official suite (29 `SimpleTestFile` textprotos, pre-encoded to binary at vendoring time since Google.Protobuf C# has no textproto parser). Each conformance test is an individual xUnit case. `testdata/known-failures.txt` tracks not-yet-passing tests: a listed test that *starts passing* fails CI until the list is updated, so the pass rate can only go up.
+Celly vendors the official suite (30 `SimpleTestFile` textprotos, pre-encoded to binary at vendoring time since Google.Protobuf C# has no textproto parser). Each of the 2,456 conformance cases is an individual xUnit test. `testdata/known-failures.txt` is a ratcheting skip-list — a listed test that starts passing fails CI until the list is updated — and it is now **empty**.
 
-## Roadmap
-
-| Milestone | Scope | Conformance files green |
-|---|---|---|
-| M0 | Skeleton, CI, conformance pipeline | — (harness operational) |
-| M1 | Lexer, parser, macros | — (parser goldens) |
-| M2 | Value model, evaluator (parse-only mode) | basic, logic, integer_math, fp_math, lists, parse, plumbing |
-| M3 | Complete standard library | string, timestamps, macros, conversions*, comparisons, fields* |
-| M4 | Type checker | type_deduction, namespace + checked re-runs |
-| M5 | `Celly.Protobuf` | proto2, proto3, proto2_ext, enums, wrappers, dynamic |
-| M6 | Optionals, unknowns, extensions | **all 29 files** |
-| M7 | Hardening, benchmarks, NuGet release | — |
-
-See [docs/PLAN.md](docs/PLAN.md) for the full architecture and implementation plan.
+The suite's `strong_*` enum sections re-run shared expressions under the alternate strong-enum semantics they document (mutually exclusive with the default legacy sections); the harness runs those sections with Celly's strong-enum mode enabled, so both semantics are fully verified.
 
 ## License
 
-TBD (Apache-2.0 intended, matching the CEL ecosystem).
+Apache-2.0 (matching the CEL ecosystem).

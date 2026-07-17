@@ -20,6 +20,7 @@ public enum CelTypeKind
     Duration,
     Error,
     Unknown,
+    Enum, // strong-enum mode: enums as distinct named types rather than ints
 }
 
 /// <summary>
@@ -83,6 +84,9 @@ public class CelType
 
     public static CelType Opaque(string name, params CelType[] parameters) =>
         new(CelTypeKind.Opaque, name, parameters);
+
+    /// <summary>A strong-mode enum type (named; runtime values are EnumValue).</summary>
+    public static CelType EnumOf(string enumName) => new(CelTypeKind.Enum, enumName);
 
     // ---- equality --------------------------------------------------------------------------------
 

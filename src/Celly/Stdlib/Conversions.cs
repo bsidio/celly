@@ -72,6 +72,8 @@ public static class Conversions
             ? IntValue.Of(i)
             : new ErrorValue($"cannot convert string to int: '{s.Value}'"),
         TimestampValue ts => IntValue.Of(ts.Data.Seconds),
+        // Strong-enum mode only (legacy enums already are ints).
+        EnumValue e => IntValue.Of(e.Number),
         _ => ErrorValue.NoSuchOverload(),
     };
 

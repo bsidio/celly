@@ -50,7 +50,9 @@ public static class ValueConverter
             case ProtoValue.KindOneofCase.ObjectValue when value.ObjectValue.TryUnpack<Google.Protobuf.WellKnownTypes.Duration>(out var dur):
                 return DurationValue.Of(dur.Seconds, dur.Nanos);
             case ProtoValue.KindOneofCase.EnumValue:
-                return IntValue.Of(value.EnumValue.Value);
+                return registry is { StrongEnums: true }
+                    ? new EnumValue(CelType.EnumOf(value.EnumValue.Type), value.EnumValue.Value)
+                    : IntValue.Of(value.EnumValue.Value);
             case ProtoValue.KindOneofCase.ObjectValue:
                 throw new NotSupportedException("proto-typed conformance value requires a type registry");
             default:

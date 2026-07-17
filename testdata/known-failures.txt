@@ -5,27 +5,8 @@
 # the build until its entry is removed — the pass rate can only go up.
 #
 # Regenerate: CELLY_CONFORMANCE_REPORT=<file> dotnet test tests/Celly.Conformance,
-# then list the FAIL lines here. Status: M6 (2438/2456 = 99.3% passing).
+# then list the FAIL lines here.
 #
-# The only remaining entries are the strong-enum mode sections: they re-run the
-# same expressions as the (passing) legacy enum sections with mutually exclusive
-# expected results, so no single-configuration implementation can pass both.
-# cel-go's conformance runner skips them as well.
-enums/strong_proto2/assign_standalone_int
-enums/strong_proto2/convert_int_big
-enums/strong_proto2/convert_int_inrange
-enums/strong_proto2/convert_int_neg
-enums/strong_proto2/convert_string
-enums/strong_proto2/field_type
-enums/strong_proto2/type_global
-enums/strong_proto2/type_nested
-enums/strong_proto3/assign_standalone_int
-enums/strong_proto3/assign_standalone_int_big
-enums/strong_proto3/assign_standalone_int_neg
-enums/strong_proto3/convert_int_big
-enums/strong_proto3/convert_int_inrange
-enums/strong_proto3/convert_int_neg
-enums/strong_proto3/convert_string
-enums/strong_proto3/field_type
-enums/strong_proto3/type_global
-enums/strong_proto3/type_nested
+# Status: 2456/2456 — 100% of the official cel-spec conformance suite passes.
+# (The strong_* enum sections run under the strong-enum mode they document,
+# enabled via ProtoTypeRegistry.FromFiles(strongEnums: true).)
