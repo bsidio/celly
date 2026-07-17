@@ -82,6 +82,24 @@ public sealed class TypeSubstitution
             return true;
         }
 
+        // null is assignable to message, wrapper, and well-known time types.
+        if (from.Kind == CelTypeKind.Null
+            && (target.Kind is CelTypeKind.Struct or CelTypeKind.Timestamp or CelTypeKind.Duration || IsWrapper(target)))
+        {
+            return true;
+        }
+
+        // Wrapper types interoperate with their primitive: wrapper(int) ↔ int.
+        if (IsWrapper(target) && !IsWrapper(from))
+        {
+            return IsAssignable(target.Parameters[0], from);
+        }
+
+        if (IsWrapper(from) && !IsWrapper(target))
+        {
+            return IsAssignable(target, from.Parameters[0]);
+        }
+
         if (target.Kind != from.Kind || !string.Equals(target.Name, from.Name, StringComparison.Ordinal)
             || target.Parameters.Count != from.Parameters.Count)
         {
@@ -176,6 +194,9 @@ public sealed class TypeSubstitution
 
         return true;
     }
+
+    public static bool IsWrapper(CelType type) =>
+        type.Kind == CelTypeKind.Opaque && string.Equals(type.Name, "wrapper", StringComparison.Ordinal);
 
     private bool Occurs(string paramName, CelType type)
     {

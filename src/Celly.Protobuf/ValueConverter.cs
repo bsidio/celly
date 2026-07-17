@@ -10,7 +10,7 @@ namespace Celly.Protobuf;
 /// </summary>
 public static class ValueConverter
 {
-    public static CelValue ToCelValue(ProtoValue value)
+    public static CelValue ToCelValue(ProtoValue value, ProtoTypeRegistry? registry = null)
     {
         switch (value.KindCase)
         {
@@ -30,26 +30,29 @@ public static class ValueConverter
                 return BytesValue.Of(value.BytesValue.ToByteArray());
             case ProtoValue.KindOneofCase.ListValue:
             {
-                var elements = value.ListValue.Values.Select(ToCelValue).ToList();
+                var elements = value.ListValue.Values.Select(v => ToCelValue(v, registry)).ToList();
                 return Celly.Values.ListValue.Of(elements);
             }
 
             case ProtoValue.KindOneofCase.MapValue:
             {
-                var pairs = value.MapValue.Entries
-                    .Select(e => new KeyValuePair<CelValue, CelValue>(ToCelValue(e.Key), ToCelValue(e.Value)));
+                var pairs = value.MapValue.Entries.Select(e => new KeyValuePair<CelValue, CelValue>(
+                    ToCelValue(e.Key, registry), ToCelValue(e.Value, registry)));
                 return Celly.Values.MapValue.Build(pairs);
             }
 
             case ProtoValue.KindOneofCase.TypeValue:
                 return new TypeValue(TypeByName(value.TypeValue));
+            case ProtoValue.KindOneofCase.ObjectValue when registry is not null:
+                return registry.UnpackAny(value.ObjectValue);
             case ProtoValue.KindOneofCase.ObjectValue when value.ObjectValue.TryUnpack<Google.Protobuf.WellKnownTypes.Timestamp>(out var ts):
                 return TimestampValue.Of(ts.Seconds, ts.Nanos);
             case ProtoValue.KindOneofCase.ObjectValue when value.ObjectValue.TryUnpack<Google.Protobuf.WellKnownTypes.Duration>(out var dur):
                 return DurationValue.Of(dur.Seconds, dur.Nanos);
             case ProtoValue.KindOneofCase.EnumValue:
+                return IntValue.Of(value.EnumValue.Value);
             case ProtoValue.KindOneofCase.ObjectValue:
-                throw new NotSupportedException($"proto-typed conformance value ({value.KindCase}) requires the M5 type registry");
+                throw new NotSupportedException("proto-typed conformance value requires a type registry");
             default:
                 throw new NotSupportedException($"unsupported cel.expr.Value kind: {value.KindCase}");
         }

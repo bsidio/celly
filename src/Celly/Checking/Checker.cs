@@ -32,17 +32,19 @@ public sealed class Checker
     private readonly TypeEnv _env;
     private readonly string _container;
     private readonly SourceInfo _sourceInfo;
+    private readonly Providers.ITypeProvider _provider;
     private readonly ErrorReporter _reporter = new();
     private readonly TypeSubstitution _substitution = new();
     private readonly Dictionary<long, CelType> _typeMap = [];
     private readonly Dictionary<long, string> _identReferences = [];
     private int _freshParamCounter;
 
-    public Checker(TypeEnv env, string container, SourceInfo sourceInfo)
+    public Checker(TypeEnv env, string container, SourceInfo sourceInfo, Providers.ITypeProvider? provider = null)
     {
         _env = env;
         _container = container;
         _sourceInfo = sourceInfo;
+        _provider = provider ?? Providers.EmptyTypeProvider.Instance;
     }
 
     public CheckResult Check(Expr expr)
@@ -79,7 +81,7 @@ public sealed class Checker
             CallExpr call => CheckCall(call, scope),
             ListExpr list => CheckList(list, scope),
             MapExpr map => CheckMap(map, scope),
-            StructExpr st => CheckStruct(st),
+            StructExpr st => CheckStruct(st, scope),
             ComprehensionExpr comp => CheckComprehension(comp, scope),
             _ => CelType.Error,
         };
@@ -139,11 +141,26 @@ public sealed class Checker
                 _identReferences[ident.Id] = name;
                 return decl.Type;
             }
+
+            if (ProviderIdentType(name) is { } providerType)
+            {
+                _identReferences[ident.Id] = name;
+                return providerType;
+            }
         }
 
         Report(ident, $"undeclared reference to '{ident.Name}'"
             + (_container.Length > 0 ? $" (in container '{_container}')" : string.Empty));
         return CelType.Error;
+    }
+
+    /// <summary>Enum constants type as int; message type names type as type(struct).</summary>
+    private CelType? ProviderIdentType(string name)
+    {
+        var ident = _provider.FindIdent(name);
+        return ident is null ? null : ident.Type.Kind == CelTypeKind.Type && ident is Values.TypeValue tv
+            ? new CelType(CelTypeKind.Type, "type", [tv.Value])
+            : ident.Type;
     }
 
     private CelType CheckSelect(SelectExpr select, TypeEnv scope)
@@ -158,27 +175,50 @@ public sealed class Checker
                 var absolute = qualified.StartsWith('.');
                 foreach (var name in CandidateNames(qualified))
                 {
-                    var decl = absolute ? scope.FindRootVariable(name) : scope.FindVariable(name);
-                    if (decl is not null)
+                    var declType = absolute
+                        ? scope.FindRootVariable(name)?.Type
+                        : scope.FindVariable(name)?.Type;
+                    declType ??= ProviderIdentType(name);
+                    if (declType is not null)
                     {
                         _identReferences[select.Id] = name;
                         // Operand ids must still carry types for completeness.
                         StampChain(select.Operand, CelType.Dyn);
-                        return select.TestOnly ? CelType.Bool : decl.Type;
+                        return select.TestOnly ? CelType.Bool : declType;
                     }
                 }
             }
         }
 
         var operandType = _substitution.Resolve(CheckExpr(select.Operand, scope));
-        var resultType = operandType.Kind switch
+        CelType resultType;
+        switch (operandType.Kind)
         {
-            CelTypeKind.Map => operandType.Parameters[1],
-            CelTypeKind.Dyn or CelTypeKind.Error => CelType.Dyn,
-            CelTypeKind.TypeParam => CelType.Dyn,
-            CelTypeKind.Struct => CelType.Dyn, // refined by the M5 type provider
-            _ => ReportType(select, $"type '{operandType}' does not support field selection"),
-        };
+            case CelTypeKind.Map:
+                resultType = operandType.Parameters[1];
+                break;
+            case CelTypeKind.Dyn or CelTypeKind.Error or CelTypeKind.TypeParam:
+                resultType = CelType.Dyn;
+                break;
+            case CelTypeKind.Struct:
+                var fieldType = _provider.FindStructFieldType(operandType.Name, select.Field);
+                if (fieldType is null)
+                {
+                    resultType = _provider.FindStructType(operandType.Name) is null
+                        ? CelType.Dyn // unknown message type (no provider registered): stay dynamic
+                        : ReportType(select, $"undefined field '{select.Field}'");
+                }
+                else
+                {
+                    resultType = fieldType;
+                }
+
+                break;
+            default:
+                resultType = ReportType(select, $"type '{operandType}' does not support field selection");
+                break;
+        }
+
         return select.TestOnly ? CelType.Bool : resultType;
     }
 
@@ -357,11 +397,49 @@ public sealed class Checker
         return CelType.Map(key ?? FreshTypeParam(), value ?? FreshTypeParam());
     }
 
-    private CelType CheckStruct(StructExpr st)
+    private CelType CheckStruct(StructExpr st, TypeEnv scope)
     {
-        // Message construction requires a type provider (M5).
-        Report(st, $"undeclared reference to '{st.MessageName}'");
-        return CelType.Error;
+        string? resolved = null;
+        CelType? structType = null;
+        foreach (var name in CandidateNames(st.MessageName))
+        {
+            if (_provider.FindStructType(name) is { } found)
+            {
+                resolved = name;
+                structType = found;
+                break;
+            }
+        }
+
+        if (resolved is null || structType is null)
+        {
+            Report(st, $"undeclared reference to '{st.MessageName}'");
+            foreach (var field in st.Fields)
+            {
+                CheckExpr(field.Value, scope);
+            }
+
+            return CelType.Error;
+        }
+
+        _identReferences[st.Id] = resolved;
+        foreach (var field in st.Fields)
+        {
+            var valueType = CheckExpr(field.Value, scope);
+            var fieldType = _provider.FindStructFieldType(resolved, field.Name);
+            if (fieldType is null)
+            {
+                Report(st, $"undefined field '{field.Name}'");
+                continue;
+            }
+
+            if (!_substitution.IsAssignable(fieldType, valueType))
+            {
+                Report(st, $"expected type of field '{field.Name}' is '{fieldType}' but provided type is '{_substitution.Finalize(valueType)}'");
+            }
+        }
+
+        return structType;
     }
 
     private CelType CheckComprehension(ComprehensionExpr comp, TypeEnv scope)

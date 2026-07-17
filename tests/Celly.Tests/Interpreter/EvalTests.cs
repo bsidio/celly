@@ -121,11 +121,13 @@ public class EvalTests
     [InlineData("2.0 == 2", true)]
     [InlineData("2.0 == 2u", true)]
     [InlineData("1 == 1u", true)]
-    // precision: 2^63 as double is exactly 9223372036854775808, greater than int64 max
-    [InlineData("9223372036854775807 < 9223372036854775808.0", true)]
-    // 2^53 + 1 is not representable as double; must not compare equal via rounding
-    [InlineData("9007199254740993 == 9007199254740992.0", false)]
-    [InlineData("9007199254740993 > 9007199254740992.0", true)]
+    // Boundary semantics match cel-go exactly (the conformance suite codifies them): doubles
+    // beyond ±2^63 order strictly, but IN-range comparisons cast int→double, which is lossy
+    // above 2^53 — so int64max compares EQUAL to 2^63.0 ("lossy" per the suite's own naming).
+    [InlineData("9223372036854775807 < 9223372036854777856.0", true)] // next double above 2^63
+    [InlineData("9223372036854775807 >= 9223372036854775808.0", true)] // lossy boundary equality
+    [InlineData("9007199254740993 == 9007199254740992.0", true)] // lossy above 2^53, per cel-go
+    [InlineData("9007199254740993 > 9007199254740992.0", false)]
     public void Comparisons(string expression, bool expected) => AssertBool(expression, expected);
 
     [Theory]

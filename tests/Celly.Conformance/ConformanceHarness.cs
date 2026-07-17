@@ -14,12 +14,20 @@ namespace Celly.Conformance;
 /// </summary>
 public static class ConformanceHarness
 {
+    /// <summary>Shared registry with the conformance TestAllTypes schemas (proto2 + proto3).</summary>
+    public static readonly ProtoTypeRegistry Registry = ProtoTypeRegistry.FromFiles(
+        Cel.Expr.Conformance.Proto2.TestAllTypesReflection.Descriptor,
+        Cel.Expr.Conformance.Proto2.TestAllTypesExtensionsReflection.Descriptor,
+        Cel.Expr.Conformance.Proto3.TestAllTypesReflection.Descriptor);
+
     public static void Run(SimpleTest test)
     {
         var env = CelEnv.Create(new CelEnvSettings
         {
             Container = test.Container,
             DisableMacros = test.DisableMacros,
+            TypeProvider = Registry,
+            Adapter = Registry,
             Declarations =
             [
                 .. test.TypeEnv
@@ -88,7 +96,7 @@ public static class ConformanceHarness
         switch (test.ResultMatcherCase)
         {
             case SimpleTest.ResultMatcherOneofCase.Value:
-                AssertValue(ValueConverter.ToCelValue(test.Value), result, test);
+                AssertValue(ValueConverter.ToCelValue(test.Value, Registry), result, test);
                 break;
 
             case SimpleTest.ResultMatcherOneofCase.TypedResult:
@@ -98,7 +106,7 @@ public static class ConformanceHarness
                     throw new NotSupportedException("typed_result without result requires the M4 checker");
                 }
 
-                AssertValue(ValueConverter.ToCelValue(test.TypedResult.Result), result, test);
+                AssertValue(ValueConverter.ToCelValue(test.TypedResult.Result, Registry), result, test);
                 break;
 
             case SimpleTest.ResultMatcherOneofCase.EvalError:
@@ -157,7 +165,7 @@ public static class ConformanceHarness
         {
             bindings[name] = exprValue.KindCase switch
             {
-                ExprValue.KindOneofCase.Value => ValueConverter.ToCelValue(exprValue.Value),
+                ExprValue.KindOneofCase.Value => ValueConverter.ToCelValue(exprValue.Value, Registry),
                 _ => throw new NotSupportedException($"unsupported binding kind: {exprValue.KindCase}"),
             };
         }
@@ -211,6 +219,10 @@ public static class ResultMatcher
                 return e.Data == a.Data;
             case (DurationValue e, DurationValue a):
                 return e.Data == a.Data;
+            case (ProtoMessageValue e, ProtoMessageValue a):
+                // Field-wise CEL equality is NaN-strict; conformance matching wants proto-style
+                // NaN==NaN, so compare messages by proto equality with a NaN-tolerant fallback.
+                return e.EqualTo(a) || e.Message.Equals(a.Message);
             case (Celly.Values.ListValue e, Celly.Values.ListValue a):
             {
                 if (e.Elements.Count != a.Elements.Count)

@@ -36,6 +36,11 @@ public static class NumericCompare
         return a.CompareTo(b);
     }
 
+    // Int↔double and uint↔double compare exactly like cel-go's compareDoubleInt/compareDoubleUint:
+    // out-of-range doubles order strictly, and IN-range comparisons cast the integer to double.
+    // That cast is lossy above 2^53 — deliberately so: the conformance suite codifies this
+    // (e.g. "gte_dyn_int_big_lossy_double": 9223372036854775807 >= 9223372036854775808.0 is true).
+
     public static int? Compare(long a, double b)
     {
         if (double.IsNaN(b))
@@ -43,7 +48,7 @@ public static class NumericCompare
             return null;
         }
 
-        if (b >= TwoPow63)
+        if (b > TwoPow63)
         {
             return -1;
         }
@@ -53,15 +58,7 @@ public static class NumericCompare
             return 1;
         }
 
-        // |b| < 2^63: the truncation is exact (any double >= 2^52 in magnitude is integral).
-        var truncated = (long)b;
-        if (a != truncated)
-        {
-            return a < truncated ? -1 : 1;
-        }
-
-        var fraction = b - truncated;
-        return fraction > 0 ? -1 : fraction < 0 ? 1 : 0;
+        return ((double)a).CompareTo(b);
     }
 
     public static int? Compare(double a, long b) => -Compare(b, a);
@@ -73,7 +70,7 @@ public static class NumericCompare
             return null;
         }
 
-        if (b >= TwoPow64)
+        if (b > TwoPow64)
         {
             return -1;
         }
@@ -83,14 +80,7 @@ public static class NumericCompare
             return 1;
         }
 
-        var truncated = (ulong)b;
-        if (a != truncated)
-        {
-            return a < truncated ? -1 : 1;
-        }
-
-        var fraction = b - truncated;
-        return fraction > 0 ? -1 : fraction < 0 ? 1 : 0;
+        return ((double)a).CompareTo(b);
     }
 
     public static int? Compare(double a, ulong b) => -Compare(b, a);

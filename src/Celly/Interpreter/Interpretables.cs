@@ -42,27 +42,6 @@ internal sealed class ScopeIdentEval(string name) : IInterpretable
         activation.TryFind(name, out var value) ? value : ErrorValue.NoSuchAttribute(name);
 }
 
-internal static class CandidateResolution
-{
-    /// <summary>Per-candidate resolution: activation bindings first, then standard type idents.</summary>
-    public static CelValue? Resolve(IActivation activation, IReadOnlyList<string> candidates)
-    {
-        foreach (var name in candidates)
-        {
-            if (activation.TryFind(name, out var value))
-            {
-                return value;
-            }
-
-            if (Planner.TypeIdents.TryGetValue(name, out var typeIdent))
-            {
-                return typeIdent;
-            }
-        }
-
-        return null;
-    }
-}
 
 /// <summary>
 /// Field selection with maybe-attribute semantics: in parse-only mode <c>a.b.c</c> may be a
@@ -73,14 +52,24 @@ internal sealed class SelectEval(
     IInterpretable operand,
     string field,
     IReadOnlyList<string> qualifiedCandidates,
+    CelValue? staticFallback = null,
     bool absolute = false) : IInterpretable
 {
     public CelValue Eval(IActivation activation)
     {
+        // Absolute references (.name) resolve outside comprehension scopes.
         var scope = absolute ? ScopedActivation.Unwrap(activation) : activation;
-        if (CandidateResolution.Resolve(scope, qualifiedCandidates) is { } bound)
+        foreach (var name in qualifiedCandidates)
         {
-            return bound;
+            if (scope.TryFind(name, out var bound))
+            {
+                return bound;
+            }
+        }
+
+        if (staticFallback is not null)
+        {
+            return staticFallback;
         }
 
         var value = operand.Eval(activation);
@@ -88,6 +77,7 @@ internal sealed class SelectEval(
         {
             ErrorValue or UnknownValue => value,
             MapValue map => map.Get(StringValue.Of(field)),
+            Providers.IStructValue st => st.GetField(field),
             _ => ErrorValue.NoSuchOverload(),
         };
     }
@@ -103,8 +93,61 @@ internal sealed class TestOnlySelectEval(IInterpretable operand, string field) :
         {
             ErrorValue or UnknownValue => value,
             MapValue map => map.Contains(StringValue.Of(field)),
+            Providers.IStructValue st => st.HasField(field),
             _ => ErrorValue.NoSuchOverload(),
         };
+    }
+}
+
+internal sealed class StructFieldEval(string name, IInterpretable value, bool optional)
+{
+    public string Name => name;
+
+    public IInterpretable Value => value;
+
+    public bool Optional => optional;
+}
+
+/// <summary>Message construction through the type provider.</summary>
+internal sealed class StructEval(Providers.ITypeProvider provider, string messageName, StructFieldEval[] fields) : IInterpretable
+{
+    public CelValue Eval(IActivation activation)
+    {
+        var values = new List<KeyValuePair<string, CelValue>>(fields.Length);
+        UnknownValue? unknown = null;
+        foreach (var field in fields)
+        {
+            var v = field.Value.Eval(activation);
+            if (v is ErrorValue)
+            {
+                return v;
+            }
+
+            if (v is UnknownValue u)
+            {
+                unknown = unknown is null ? u : UnknownValue.Merge(unknown, u);
+                continue;
+            }
+
+            if (field.Optional)
+            {
+                if (v is OptionalValue opt)
+                {
+                    if (opt.HasValue)
+                    {
+                        values.Add(new(field.Name, opt.Value));
+                    }
+
+                    continue;
+                }
+
+                return ErrorValue.NoSuchOverload();
+            }
+
+            values.Add(new(field.Name, v));
+        }
+
+        return unknown is not null ? unknown : provider.NewValue(messageName, values);
     }
 }
 

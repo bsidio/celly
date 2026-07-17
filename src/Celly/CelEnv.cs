@@ -22,6 +22,9 @@ public sealed class CelEnvSettings
     /// <summary>Adapter for native .NET values in activations.</summary>
     public ITypeAdapter Adapter { get; init; } = NativeTypeAdapter.Instance;
 
+    /// <summary>Struct/enum type support (message construction, field types, enum constants).</summary>
+    public ITypeProvider TypeProvider { get; init; } = EmptyTypeProvider.Instance;
+
     /// <summary>Additional/replacement runtime functions, applied over the standard registry.</summary>
     public Action<FunctionRegistry>? ConfigureFunctions { get; init; }
 
@@ -83,7 +86,7 @@ public sealed class CelEnv
             env.AddVariable(decl);
         }
 
-        var checker = new Checking.Checker(env, Settings.Container, ast.SourceInfo);
+        var checker = new Checking.Checker(env, Settings.Container, ast.SourceInfo, Settings.TypeProvider);
         var result = checker.Check(ast.Expr);
         if (!result.HasErrors)
         {
@@ -95,7 +98,7 @@ public sealed class CelEnv
 
     public CelProgram Program(CelAbstractSyntax ast)
     {
-        var planner = new Planner(_functions, Settings.Container);
+        var planner = new Planner(_functions, Settings.Container, Settings.TypeProvider);
         return new CelProgram(planner.Plan(ast.Expr), Settings.Adapter);
     }
 

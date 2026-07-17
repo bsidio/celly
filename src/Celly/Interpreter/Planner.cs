@@ -11,7 +11,7 @@ namespace Celly.Interpreter;
 /// logical operators become dedicated absorption nodes, and identifier/select chains carry their
 /// container-qualified candidate names for parse-only (maybe-attribute) resolution.
 /// </summary>
-public sealed class Planner(FunctionRegistry functions, string container)
+public sealed class Planner(FunctionRegistry functions, string container, Providers.ITypeProvider provider)
 {
     internal static readonly Dictionary<string, CelValue> TypeIdents = new()
     {
@@ -49,17 +49,7 @@ public sealed class Planner(FunctionRegistry functions, string container)
 
                 var absolute = ident.Name.StartsWith('.');
                 var candidates = ResolveCandidateNames(ident.Name);
-                CelValue? typeIdent = null;
-                foreach (var name in candidates)
-                {
-                    if (TypeIdents.TryGetValue(name, out var tv))
-                    {
-                        typeIdent = tv;
-                        break;
-                    }
-                }
-
-                return new IdentEval(candidates, typeIdent, absolute);
+                return new IdentEval(candidates, StaticFallback(candidates), absolute);
             }
 
             case SelectExpr select:
@@ -78,8 +68,8 @@ public sealed class Planner(FunctionRegistry functions, string container)
                 }
 
                 var absolute = qualified is not null && qualified.StartsWith('.');
-                var candidates = qualified is null ? [] : ResolveCandidateNames(qualified);
-                return new SelectEval(operandEval, select.Field, candidates, absolute);
+                IReadOnlyList<string> candidates = qualified is null ? [] : ResolveCandidateNames(qualified);
+                return new SelectEval(operandEval, select.Field, candidates, StaticFallback(candidates), absolute);
             }
 
             case CallExpr call:
@@ -92,7 +82,21 @@ public sealed class Planner(FunctionRegistry functions, string container)
                 return new MapEval([.. map.Entries.Select(e => new MapEntryEval(Plan(e.Key), Plan(e.Value), e.Optional))]);
 
             case StructExpr st:
+            {
+                // Resolve the message type name through the container at plan time.
+                foreach (var name in ResolveCandidateNames(st.MessageName))
+                {
+                    if (provider.FindStructType(name) is not null)
+                    {
+                        var fields = st.Fields
+                            .Select(f => new StructFieldEval(f.Name, Plan(f.Value), f.Optional))
+                            .ToArray();
+                        return new StructEval(provider, name, fields);
+                    }
+                }
+
                 return new UnknownStructEval(st.MessageName);
+            }
 
             case ComprehensionExpr comp:
             {
@@ -146,6 +150,25 @@ public sealed class Planner(FunctionRegistry functions, string container)
     {
         var dot = qualifiedName.IndexOf('.');
         return dot < 0 ? qualifiedName : qualifiedName[..dot];
+    }
+
+    /// <summary>Plan-time constant resolution: standard type idents, then provider idents (enums, message types).</summary>
+    private CelValue? StaticFallback(IReadOnlyList<string> candidates)
+    {
+        foreach (var name in candidates)
+        {
+            if (TypeIdents.TryGetValue(name, out var typeIdent))
+            {
+                return typeIdent;
+            }
+
+            if (provider.FindIdent(name) is { } providerIdent)
+            {
+                return providerIdent;
+            }
+        }
+
+        return null;
     }
 
     private IInterpretable PlanCall(CallExpr call)
