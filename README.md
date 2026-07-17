@@ -64,14 +64,65 @@ Use `Celly` alone to evaluate expressions over .NET dictionaries/lists/primitive
 - **First-class ASTs**: traversal/inspection tools (`AstTools`), lossless conversion to/from the canonical `cel.expr` protos (`ParsedExpr`/`CheckedExpr` incl. type & reference maps) for caching and cross-implementation interop, and a precedence-aware unparser (AST → source, macros restored to original form)
 - **Thread safety**: `CelEnv` and `CelProgram` are immutable; programs are safe for concurrent evaluation
 
+## Enabling extensions
+
+Extensions are **opt-in** — the same model as cel-go (`ext.Strings()`, `cel.OptionalTypes()`,
+…). A bare environment can't evaluate `optional.of(...)`, `'x'.substring(1)`, or
+`math.greatest(...)` because those functions aren't registered. Add just the libraries you
+need:
+
 ```csharp
-// Extensions are opt-in libraries:
+using Celly;
+using Celly.Extensions;
+
 var env = CelEnv.Create(new CelEnvSettings
 {
-    Libraries = [Celly.Extensions.StringsLibrary.Instance, Celly.Extensions.MathLibrary.Instance],
+    Libraries = [StringsLibrary.Instance, MathLibrary.Instance],
 });
 env.Compile("'%d apples'.format([math.greatest(3, 7, 5)])").Eval(); // "7 apples"
 ```
+
+Or turn on the **full feature set** (all nine libraries + protobuf type support) — this has
+no per-eval cost, since library loading is a one-time compile step:
+
+```csharp
+using Celly;
+using Celly.Extensions;
+using Celly.Protobuf;
+
+var registry = ProtoTypeRegistry.FromFiles(/* your proto descriptors */);
+var env = CelEnv.Create(new CelEnvSettings
+{
+    TypeProvider = registry,   // protobuf messages, WKTs, Any, enums, wrappers
+    Adapter = registry,
+    Libraries =
+    [
+        OptionalsLibrary.Instance,            // ?., [?], optional.of/orValue/optMap
+        StringsLibrary.Instance,              // substring, format, indexOf, join, ...
+        MathLibrary.Instance,                 // math.greatest/least, bitAnd, sqrt, ...
+        EncodersLibrary.Instance,             // base64.encode/decode
+        BindingsLibrary.Instance,             // cel.bind
+        BlockLibrary.Instance,                // cel.block
+        TwoVarComprehensionsLibrary.Instance, // all/exists with (key, value)
+        ProtosLibrary.Instance,               // proto.getExt/hasExt
+        NetworkLibrary.Instance,              // ip(), cidr()
+    ],
+});
+```
+
+| Library | Provides | Conformance file |
+|---|---|---|
+| `OptionalsLibrary` | `?.`, `[?]`, `optional.of/none/orValue/optMap/optFlatMap` | `optionals` |
+| `StringsLibrary` | `charAt`, `indexOf`, `substring`, `replace`, `split`, `join`, `format`, `quote`, `lowerAscii`/`upperAscii`, `reverse` | `string_ext` |
+| `MathLibrary` | `math.greatest/least`, `ceil/floor/round/trunc`, `abs/sign`, `sqrt`, bitwise, `isNaN/isInf/isFinite` | `math_ext` |
+| `EncodersLibrary` | `base64.encode/decode` | `encoders_ext` |
+| `BindingsLibrary` | `cel.bind` | `bindings_ext` |
+| `BlockLibrary` | `cel.block` (optimizer form) | `block_ext` |
+| `TwoVarComprehensionsLibrary` | `all/exists/existsOne/transformList/transformMap` with two vars | `macros2` |
+| `ProtosLibrary` | `proto.getExt/hasExt` | `proto2_ext` |
+| `NetworkLibrary` | `net.IP`, `net.CIDR` | `network_ext` |
+
+See the [extensions guide](https://bsid.io/celly/guide/extensions/) for examples of each.
 
 ## Building
 

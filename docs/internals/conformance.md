@@ -73,6 +73,28 @@ The pass-rate history, for the record:
 | M6 extensions | 2,438 | optionals, string_ext, math_ext, macros2, all *_ext files |
 | strong enums | **2,456 (100%)** | enums(strong) |
 
+## Independent verification (three ways, no shared parts)
+
+100% is verified three independent ways, so no single harness or data pipeline has to be
+trusted on its own:
+
+1. **The repo suite** (`tests/Celly.Conformance`) — protoc-encoded data, local build,
+   xUnit. **2,456 / 2,456.**
+2. **A fully-independent audit** (`tools/independent-audit/`) that shares *nothing* with the
+   repo suite: test data converted by **Python `text_format`** (not protoc), Celly pulled
+   from the **NuGet package** (not a project reference), a fresh single-file harness. With
+   all features enabled it scores **2,454 / 2,456 (99.9%)**, every extension file at 100%.
+   Its 2 "misses" are a defect in Python's `text_format` — it mis-decodes the `\?` escape in
+   two `bytes_literals` **expected values** (keeping the backslash, 10 bytes) — not in Celly:
+   cel-go *and* Celly both evaluate those expressions to the correct 9 bytes, matching
+   protoc's encoding. (This is the known cel-spec textformat `\?` ambiguity, PR #512.)
+3. **Differential fuzzing vs cel-go** (`tools/differential/`) — tens of thousands of random
+   generated expressions evaluated in both Celly and the reference implementation, compared
+   byte-for-byte. **0 divergences.** An implementation that were only ~45% correct would
+   diverge from the reference on thousands of these.
+
+The three agree, by three different routes, on the same conclusion.
+
 ## Extensions and proto support are opt-in — a runner must enable them
 
 The suite has separate files (`string_ext`, `math_ext`, `optionals`, `wrappers`, `proto2`,
