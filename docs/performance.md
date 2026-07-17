@@ -17,8 +17,16 @@ tests/Celly.Benchmarks` and `go test -bench=.` in `benchmarks/celgo/`.*
 |---|--:|--:|--:|
 | Simple `x + 1 > 3 && name.startsWith('h')` | 130 ns | **107 ns** | 153 ns |
 | Comprehension `items.filter(…).map(…).exists(…)` (100 elems) | **15.1 µs** | 22.5 µs | 33.1 µs |
+| Extension-heavy `upperAscii/substring/join/string/math.greatest` | **11.6 µs** | 25.9 µs | — † |
 
-Two things stand out:
+† Cel.NET doesn't ship the math extension, so the expression won't compile there.
+
+All benchmarks run with **all nine extension libraries enabled** (as a real deployment and
+the conformance runner do). That has **no measurable per-eval cost** — a simple expression
+evaluates in 125 ns whether the env has zero libraries or all nine (library loading is a
+one-time compile cost; the eval hot path only touches the functions the expression uses).
+
+Three things stand out:
 
 - **On simple expressions, Celly is within ~1.2× of the Go reference** and faster than the
   other .NET library — a good place to be for a managed implementation measured against
@@ -27,6 +35,9 @@ Two things stand out:
   cel-go itself** (15.1 µs vs 22.5 µs, ~1.5×). The [rope-based list
   concatenation](internals/values.md) turns the `@result + [element]` accumulation pattern
   from O(n²) into O(n), which is exactly where comprehension cost concentrates.
+- **On extension-heavy expressions (strings + math), Celly is ~2.2× faster than cel-go**
+  (11.6 µs vs 25.9 µs) — the extension functions ride the same tree-walk hot path with no
+  dispatch penalty.
 
 Allocation differs by runtime and isn't directly comparable across the Go/.NET boundary:
 cel-go's escape analysis keeps simple-eval allocation very low (16 B), while Celly and

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/cel-go/cel"
+	"github.com/google/cel-go/ext"
 	"github.com/google/cel-go/common/types/ref"
 )
 
@@ -70,5 +71,21 @@ func BenchmarkCelGo_Compile_Simple(b *testing.B) {
 		_ = mustCompile(simpleExpr,
 			cel.Variable("x", cel.IntType),
 			cel.Variable("name", cel.StringType))
+	}
+}
+
+const extExpr = "name.upperAscii().substring(0, 2) + items.map(i, string(i)).join(',') + string(math.greatest(items))"
+
+func BenchmarkCelGo_Eval_Extensions(b *testing.B) {
+	prg := mustCompile(extExpr,
+		cel.Variable("name", cel.StringType),
+		cel.Variable("items", cel.ListType(cel.IntType)),
+		ext.Strings(), ext.Math())
+	act := map[string]any{"name": "hello", "items": items()}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		out, _, _ := prg.Eval(act)
+		_ = out
 	}
 }
