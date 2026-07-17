@@ -13,7 +13,7 @@ namespace Celly.Interpreter;
 /// </summary>
 public sealed class Planner(FunctionRegistry functions, string container)
 {
-    private static readonly Dictionary<string, CelValue> TypeIdents = new()
+    internal static readonly Dictionary<string, CelValue> TypeIdents = new()
     {
         ["bool"] = new TypeValue(CelType.Bool),
         ["int"] = new TypeValue(CelType.Int),

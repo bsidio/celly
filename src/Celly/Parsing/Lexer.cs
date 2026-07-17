@@ -93,6 +93,11 @@ public sealed class Lexer
             return LexString(start, isRaw: false, isBytes: false);
         }
 
+        if (c == '`')
+        {
+            return LexEscapedIdent();
+        }
+
         _pos++;
         switch (c)
         {
@@ -152,6 +157,38 @@ public sealed class Lexer
         }
 
         return false;
+    }
+
+    /// <summary>Backtick-escaped identifier: letters, digits, and [_.-/ ], selector positions only.</summary>
+    private Token LexEscapedIdent()
+    {
+        var start = _pos;
+        _pos++; // opening backtick
+        var contentStart = _pos;
+        while (_pos < _text.Length && _text[_pos] != '`')
+        {
+            var c = _text[_pos];
+            if (!(char.IsAsciiLetterOrDigit(c) || c is '_' or '.' or '-' or '/' or ' '))
+            {
+                throw new LexException(_pos, $"invalid character '{c}' in escaped identifier");
+            }
+
+            _pos++;
+        }
+
+        if (_pos >= _text.Length)
+        {
+            throw new LexException(start, "unterminated escaped identifier");
+        }
+
+        if (_pos == contentStart)
+        {
+            throw new LexException(start, "empty escaped identifier");
+        }
+
+        var name = _text[contentStart.._pos];
+        _pos++; // closing backtick
+        return new Token(TokenKind.EscapedIdent, start, _pos - start, name);
     }
 
     // ---- identifiers, keywords, and string prefixes -------------------------------------------

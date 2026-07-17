@@ -6,6 +6,7 @@ public enum TokenKind
 
     Ident,
     Reserved, // reserved words: usable as selectors/receiver-call names, not as identifiers
+    EscapedIdent, // `quoted-field` — selector and field-name positions only
 
     IntLit,
     UintLit,

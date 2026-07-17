@@ -33,6 +33,28 @@ internal sealed class IdentEval(IReadOnlyList<string> candidates, CelValue? type
     }
 }
 
+internal static class CandidateResolution
+{
+    /// <summary>Per-candidate resolution: activation bindings first, then standard type idents.</summary>
+    public static CelValue? Resolve(IActivation activation, IReadOnlyList<string> candidates)
+    {
+        foreach (var name in candidates)
+        {
+            if (activation.TryFind(name, out var value))
+            {
+                return value;
+            }
+
+            if (Planner.TypeIdents.TryGetValue(name, out var typeIdent))
+            {
+                return typeIdent;
+            }
+        }
+
+        return null;
+    }
+}
+
 /// <summary>
 /// Field selection with maybe-attribute semantics: in parse-only mode <c>a.b.c</c> may be a
 /// variable named "a.b.c" (per container resolution) rather than field accesses, so qualified
@@ -42,12 +64,9 @@ internal sealed class SelectEval(IInterpretable operand, string field, IReadOnly
 {
     public CelValue Eval(IActivation activation)
     {
-        foreach (var name in qualifiedCandidates)
+        if (CandidateResolution.Resolve(activation, qualifiedCandidates) is { } bound)
         {
-            if (activation.TryFind(name, out var bound))
-            {
-                return bound;
-            }
+            return bound;
         }
 
         var value = operand.Eval(activation);

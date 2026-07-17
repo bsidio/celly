@@ -43,6 +43,10 @@ public static class ValueConverter
 
             case ProtoValue.KindOneofCase.TypeValue:
                 return new TypeValue(TypeByName(value.TypeValue));
+            case ProtoValue.KindOneofCase.ObjectValue when value.ObjectValue.TryUnpack<Google.Protobuf.WellKnownTypes.Timestamp>(out var ts):
+                return TimestampValue.Of(ts.Seconds, ts.Nanos);
+            case ProtoValue.KindOneofCase.ObjectValue when value.ObjectValue.TryUnpack<Google.Protobuf.WellKnownTypes.Duration>(out var dur):
+                return DurationValue.Of(dur.Seconds, dur.Nanos);
             case ProtoValue.KindOneofCase.EnumValue:
             case ProtoValue.KindOneofCase.ObjectValue:
                 throw new NotSupportedException($"proto-typed conformance value ({value.KindCase}) requires the M5 type registry");

@@ -150,6 +150,10 @@ public static class ResultMatcher
                 return e.Span.SequenceEqual(a.Span);
             case (TypeValue e, TypeValue a):
                 return string.Equals(e.Value.Name, a.Value.Name, StringComparison.Ordinal);
+            case (TimestampValue e, TimestampValue a):
+                return e.Data == a.Data;
+            case (DurationValue e, DurationValue a):
+                return e.Data == a.Data;
             case (Celly.Values.ListValue e, Celly.Values.ListValue a):
             {
                 if (e.Elements.Count != a.Elements.Count)

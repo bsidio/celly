@@ -72,6 +72,59 @@ public static class StandardFunctions
         registry.Register("type", args => args is [var v] ? new TypeValue(v.Type) : ErrorValue.NoSuchOverload());
         registry.Register("dyn", args => args is [var v] ? v : ErrorValue.NoSuchOverload());
 
+        // Conversions.
+        registry.Register("bool", args => args is [var v] ? Conversions.ToBool(v) : ErrorValue.NoSuchOverload());
+        registry.Register("bytes", args => args is [var v] ? Conversions.ToBytes(v) : ErrorValue.NoSuchOverload());
+        registry.Register("double", args => args is [var v] ? Conversions.ToDouble(v) : ErrorValue.NoSuchOverload());
+        registry.Register("int", args => args is [var v] ? Conversions.ToInt(v) : ErrorValue.NoSuchOverload());
+        registry.Register("uint", args => args is [var v] ? Conversions.ToUint(v) : ErrorValue.NoSuchOverload());
+        registry.Register("string", args => args is [var v] ? Conversions.ToString(v) : ErrorValue.NoSuchOverload());
+        registry.Register("timestamp", args => args switch
+        {
+            [TimestampValue ts] => ts,
+            [StringValue s] => TimeFunctions.ParseTimestamp(s.Value),
+            [IntValue i] => TimestampValue.Of(i.Value, 0), // epoch seconds
+            _ => ErrorValue.NoSuchOverload(),
+        });
+        registry.Register("duration", args => args switch
+        {
+            [DurationValue d] => d,
+            [StringValue s] => TimeFunctions.ParseDuration(s.Value),
+            _ => ErrorValue.NoSuchOverload(),
+        });
+
+        // String tests (receiver style; matches also has a global form).
+        registry.Register("contains", args => args is [StringValue s, StringValue sub]
+            ? BoolValue.Of(s.Value.Contains(sub.Value, StringComparison.Ordinal))
+            : ErrorValue.NoSuchOverload());
+        registry.Register("startsWith", args => args is [StringValue s, StringValue prefix]
+            ? BoolValue.Of(s.Value.StartsWith(prefix.Value, StringComparison.Ordinal))
+            : ErrorValue.NoSuchOverload());
+        registry.Register("endsWith", args => args is [StringValue s, StringValue suffix]
+            ? BoolValue.Of(s.Value.EndsWith(suffix.Value, StringComparison.Ordinal))
+            : ErrorValue.NoSuchOverload());
+        registry.Register("matches", args => args is [StringValue s, StringValue pattern]
+            ? NonBacktrackingRegexEngine.Instance.IsMatch(pattern.Value, s.Value)
+            : ErrorValue.NoSuchOverload());
+
+        // Temporal accessors: timestamp forms take an optional IANA/fixed-offset timezone.
+        foreach (var accessor in (string[])
+        [
+            "getFullYear", "getMonth", "getDate", "getDayOfMonth", "getDayOfWeek",
+            "getDayOfYear", "getHours", "getMinutes", "getSeconds", "getMilliseconds",
+        ])
+        {
+            var name = accessor;
+            registry.Register(name, args => args switch
+            {
+                [TimestampValue ts] => TimeFunctions.TimestampAccessor(ts, name, null),
+                [TimestampValue ts, StringValue tz] => TimeFunctions.TimestampAccessor(ts, name, tz.Value),
+                [DurationValue d] when name is "getHours" or "getMinutes" or "getSeconds" or "getMilliseconds"
+                    => TimeFunctions.DurationAccessor(d, name),
+                _ => ErrorValue.NoSuchOverload(),
+            });
+        }
+
         return registry;
     }
 

@@ -381,10 +381,13 @@ public sealed class CelParser
         }
     }
 
-    /// <summary>Selectors admit reserved words (SELECTOR = identifier-shaped minus KEYWORD only).</summary>
+    /// <summary>
+    /// Selectors admit reserved words (SELECTOR = identifier-shaped minus KEYWORD only) and
+    /// backtick-escaped identifiers.
+    /// </summary>
     private Token ExpectSelector(string what)
     {
-        if (Current.Kind is TokenKind.Ident or TokenKind.Reserved)
+        if (Current.Kind is TokenKind.Ident or TokenKind.Reserved or TokenKind.EscapedIdent)
         {
             return Advance();
         }
