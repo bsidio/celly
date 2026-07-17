@@ -56,6 +56,7 @@ Use `Celly` alone to evaluate expressions over .NET dictionaries/lists/primitive
 - **Optionals**: `optional.of/ofNonZeroValue/none`, `a.?b`, `a[?b]`, `[?e]`, `{?k: v}`, `orValue`, `optMap`/`optFlatMap`, full optional chaining
 - **Extension libraries** (opt-in via `CelEnvSettings.Libraries`): strings (incl. `format` and `strings.quote`), math, encoders (base64), bindings (`cel.bind`), block (`cel.block`), two-var comprehensions, proto2 extensions (`proto.getExt/hasExt`), networking (`net.IP`/`net.CIDR`)
 - **Protobuf**: message construction with WKT collapse (wrappers → primitives, Struct/Value/ListValue → map/dyn/list), Any pack/unpack with bytewise fallback, presence-aware field-wise message equality, proto2 extension fields, **strong-enum mode** (`ProtoTypeRegistry.FromFiles(strongEnums: true, …)`) where enums are distinct named types — an opt-in the reference Go implementation doesn't offer
+- **First-class ASTs**: traversal/inspection tools (`AstTools`), lossless conversion to/from the canonical `cel.expr` protos (`ParsedExpr`/`CheckedExpr` incl. type & reference maps) for caching and cross-implementation interop, and a precedence-aware unparser (AST → source, macros restored to original form)
 - **Thread safety**: `CelEnv` and `CelProgram` are immutable; programs are safe for concurrent evaluation
 
 ```csharp

@@ -50,6 +50,7 @@ nav:
       - Environments & Programs: guide/api.md
       - Extension Libraries: guide/extensions.md
       - Protobuf Support: guide/protobuf.md
+      - Working with ASTs: guide/ast.md
       - Errors & Absorption: guide/errors.md
   - Internals — How It Works:
       - Architecture Overview: internals/architecture.md

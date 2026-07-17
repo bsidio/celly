@@ -49,5 +49,20 @@ public sealed class CelAbstractSyntax
     /// <summary>Checker output: expression id → deduced type; null until checked.</summary>
     public IReadOnlyDictionary<long, Types.CelType>? TypeMap { get; internal set; }
 
+    /// <summary>Checker output: expression id → resolved reference; null until checked.</summary>
+    public IReadOnlyDictionary<long, Checking.ReferenceInfo>? ReferenceMap { get; internal set; }
+
     public bool IsChecked => TypeMap is not null;
+
+    /// <summary>
+    /// Restores checker annotations on a deserialized AST (used by AST converters rehydrating a
+    /// cel.expr.CheckedExpr). Prefer running CelEnv.Check for ASTs you parsed yourself.
+    /// </summary>
+    public void AnnotateChecked(
+        IReadOnlyDictionary<long, Types.CelType> typeMap,
+        IReadOnlyDictionary<long, Checking.ReferenceInfo>? referenceMap)
+    {
+        TypeMap = typeMap;
+        ReferenceMap = referenceMap;
+    }
 }

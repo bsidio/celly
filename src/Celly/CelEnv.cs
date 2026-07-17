@@ -109,6 +109,7 @@ public sealed class CelEnv
         if (!result.HasErrors)
         {
             ast.TypeMap = result.TypeMap;
+            ast.ReferenceMap = result.References;
         }
 
         return result;

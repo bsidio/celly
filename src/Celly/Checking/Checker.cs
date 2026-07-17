@@ -4,16 +4,37 @@ using Celly.Types;
 
 namespace Celly.Checking;
 
+/// <summary>A resolved reference: a declared name (idents/selects) or overload ids (calls).</summary>
+public sealed class ReferenceInfo
+{
+    public ReferenceInfo(string? name, IReadOnlyList<string>? overloadIds = null)
+    {
+        Name = name;
+        OverloadIds = overloadIds ?? [];
+    }
+
+    public string? Name { get; }
+
+    public IReadOnlyList<string> OverloadIds { get; }
+}
+
 /// <summary>The result of a check: type/reference maps on success, issues otherwise.</summary>
 public sealed class CheckResult
 {
-    internal CheckResult(IReadOnlyDictionary<long, CelType>? typeMap, IReadOnlyList<CelIssue> issues)
+    internal CheckResult(
+        IReadOnlyDictionary<long, CelType>? typeMap,
+        IReadOnlyList<CelIssue> issues,
+        IReadOnlyDictionary<long, ReferenceInfo>? references = null)
     {
         TypeMap = typeMap;
         Issues = issues;
+        References = references;
     }
 
     public IReadOnlyDictionary<long, CelType>? TypeMap { get; }
+
+    /// <summary>Checker output: expression id → resolved declaration reference.</summary>
+    public IReadOnlyDictionary<long, ReferenceInfo>? References { get; }
 
     public IReadOnlyList<CelIssue> Issues { get; }
 
@@ -37,6 +58,7 @@ public sealed class Checker
     private readonly TypeSubstitution _substitution = new();
     private readonly Dictionary<long, CelType> _typeMap = [];
     private readonly Dictionary<long, string> _identReferences = [];
+    private readonly Dictionary<long, List<string>> _callReferences = [];
     private int _freshParamCounter;
 
     public Checker(TypeEnv env, string container, SourceInfo sourceInfo, Providers.ITypeProvider? provider = null)
@@ -58,7 +80,18 @@ public sealed class Checker
 
         // Finalize: resolve substitutions; unbound parameters become dyn.
         var final = _typeMap.ToDictionary(kv => kv.Key, kv => _substitution.Finalize(kv.Value));
-        return new CheckResult(final, _reporter.Issues);
+        var references = new Dictionary<long, ReferenceInfo>();
+        foreach (var (id, name) in _identReferences)
+        {
+            references[id] = new ReferenceInfo(name);
+        }
+
+        foreach (var (id, overloads) in _callReferences)
+        {
+            references[id] = new ReferenceInfo(null, overloads);
+        }
+
+        return new CheckResult(final, _reporter.Issues, references);
     }
 
     private CelType CheckExpr(Expr expr, TypeEnv scope)
@@ -342,6 +375,12 @@ public sealed class Checker
             }
 
             resultType = resultType is null ? overloadResult : _substitution.Join(resultType, overloadResult);
+            if (!_callReferences.TryGetValue(call.Id, out var matchedOverloads))
+            {
+                _callReferences[call.Id] = matchedOverloads = [];
+            }
+
+            matchedOverloads.Add(overload.Id);
         }
 
         if (resultType is null)
