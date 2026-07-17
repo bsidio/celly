@@ -29,6 +29,9 @@ public sealed class Planner(FunctionRegistry functions, string container)
         ["google.protobuf.Duration"] = new TypeValue(CelType.Duration),
     };
 
+    /// <summary>In-scope comprehension variable names (refcounted for same-name nesting).</summary>
+    private readonly Dictionary<string, int> _scopeVars = new(StringComparer.Ordinal);
+
     public IInterpretable Plan(Expr expr)
     {
         switch (expr)
@@ -38,6 +41,13 @@ public sealed class Planner(FunctionRegistry functions, string container)
 
             case IdentExpr ident:
             {
+                // Comprehension variables shadow all namespaced resolution.
+                if (!ident.Name.StartsWith('.') && _scopeVars.ContainsKey(ident.Name))
+                {
+                    return new ScopeIdentEval(ident.Name);
+                }
+
+                var absolute = ident.Name.StartsWith('.');
                 var candidates = ResolveCandidateNames(ident.Name);
                 CelValue? typeIdent = null;
                 foreach (var name in candidates)
@@ -49,7 +59,7 @@ public sealed class Planner(FunctionRegistry functions, string container)
                     }
                 }
 
-                return new IdentEval(candidates, typeIdent);
+                return new IdentEval(candidates, typeIdent, absolute);
             }
 
             case SelectExpr select:
@@ -61,8 +71,15 @@ public sealed class Planner(FunctionRegistry functions, string container)
                 }
 
                 var qualified = QualifiedName(select);
+                // A chain rooted at a comprehension variable is plain field selection.
+                if (qualified is not null && _scopeVars.ContainsKey(RootSegment(qualified)))
+                {
+                    qualified = null;
+                }
+
+                var absolute = qualified is not null && qualified.StartsWith('.');
                 var candidates = qualified is null ? [] : ResolveCandidateNames(qualified);
-                return new SelectEval(operandEval, select.Field, candidates);
+                return new SelectEval(operandEval, select.Field, candidates, absolute);
             }
 
             case CallExpr call:
@@ -78,19 +95,57 @@ public sealed class Planner(FunctionRegistry functions, string container)
                 return new UnknownStructEval(st.MessageName);
 
             case ComprehensionExpr comp:
+            {
+                var range = Plan(comp.IterRange);
+                var accuInit = Plan(comp.AccuInit);
+                PushScopeVar(comp.AccuVar);
+                PushScopeVar(comp.IterVar);
+                if (comp.IterVar2 is not null)
+                {
+                    PushScopeVar(comp.IterVar2);
+                }
+
+                var loopCondition = Plan(comp.LoopCondition);
+                var loopStep = Plan(comp.LoopStep);
+                PopScopeVar(comp.IterVar);
+                if (comp.IterVar2 is not null)
+                {
+                    PopScopeVar(comp.IterVar2);
+                }
+
+                var result = Plan(comp.Result);
+                PopScopeVar(comp.AccuVar);
                 return new ComprehensionEval(
-                    comp.IterVar,
-                    comp.IterVar2,
-                    Plan(comp.IterRange),
-                    comp.AccuVar,
-                    Plan(comp.AccuInit),
-                    Plan(comp.LoopCondition),
-                    Plan(comp.LoopStep),
-                    Plan(comp.Result));
+                    comp.IterVar, comp.IterVar2, range, comp.AccuVar, accuInit, loopCondition, loopStep, result);
+            }
 
             default:
                 return new ConstEval(new ErrorValue("unspecified expression"));
         }
+    }
+
+    private void PushScopeVar(string name) =>
+        _scopeVars[name] = _scopeVars.GetValueOrDefault(name) + 1;
+
+    private void PopScopeVar(string name)
+    {
+        if (_scopeVars.TryGetValue(name, out var count))
+        {
+            if (count <= 1)
+            {
+                _scopeVars.Remove(name);
+            }
+            else
+            {
+                _scopeVars[name] = count - 1;
+            }
+        }
+    }
+
+    private static string RootSegment(string qualifiedName)
+    {
+        var dot = qualifiedName.IndexOf('.');
+        return dot < 0 ? qualifiedName : qualifiedName[..dot];
     }
 
     private IInterpretable PlanCall(CallExpr call)

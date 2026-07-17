@@ -24,6 +24,12 @@ public sealed class CelEnvSettings
 
     /// <summary>Additional/replacement runtime functions, applied over the standard registry.</summary>
     public Action<FunctionRegistry>? ConfigureFunctions { get; init; }
+
+    /// <summary>Variable declarations visible to the type checker.</summary>
+    public IReadOnlyList<Checking.VariableDecl> Declarations { get; init; } = [];
+
+    /// <summary>Additional function declarations visible to the type checker.</summary>
+    public IReadOnlyList<Checking.FunctionDecl> FunctionDeclarations { get; init; } = [];
 }
 
 /// <summary>
@@ -54,6 +60,38 @@ public sealed class CelEnv
     public static CelEnv Create(CelEnvSettings? settings = null) => new(settings ?? new CelEnvSettings());
 
     public ParseResult Parse(string expression) => CelParser.Parse(expression, _parserOptions);
+
+    /// <summary>Type-checks a parsed AST; on success annotates it with the deduced type map.</summary>
+    public Checking.CheckResult Check(CelAbstractSyntax ast)
+    {
+        var functions = Checking.StandardDecls.CreateFunctions();
+        foreach (var fn in Settings.FunctionDeclarations)
+        {
+            functions[fn.Name] = functions.TryGetValue(fn.Name, out var existing)
+                ? new Checking.FunctionDecl(fn.Name, [.. existing.Overloads, .. fn.Overloads])
+                : fn;
+        }
+
+        var env = new Checking.TypeEnv(functions);
+        foreach (var ident in Checking.StandardDecls.CreateIdents())
+        {
+            env.AddVariable(ident);
+        }
+
+        foreach (var decl in Settings.Declarations)
+        {
+            env.AddVariable(decl);
+        }
+
+        var checker = new Checking.Checker(env, Settings.Container, ast.SourceInfo);
+        var result = checker.Check(ast.Expr);
+        if (!result.HasErrors)
+        {
+            ast.TypeMap = result.TypeMap;
+        }
+
+        return result;
+    }
 
     public CelProgram Program(CelAbstractSyntax ast)
     {

@@ -55,6 +55,8 @@ public sealed class ScopedActivation(IActivation parent, string name, CelValue i
 {
     public CelValue Value { get; set; } = initial;
 
+    public IActivation Parent => parent;
+
     public bool TryFind(string name1, out CelValue value)
     {
         if (string.Equals(name1, name, StringComparison.Ordinal))
@@ -64,5 +66,16 @@ public sealed class ScopedActivation(IActivation parent, string name, CelValue i
         }
 
         return parent.TryFind(name1, out value);
+    }
+
+    /// <summary>Peels comprehension scopes for absolute (leading-dot) name resolution.</summary>
+    public static IActivation Unwrap(IActivation activation)
+    {
+        while (activation is ScopedActivation scoped)
+        {
+            activation = scoped.Parent;
+        }
+
+        return activation;
     }
 }

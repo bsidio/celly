@@ -33,7 +33,7 @@ public sealed class SourceInfo
     public Location LocationOf(long exprId) => Source.LocationOf(PositionOf(exprId));
 }
 
-/// <summary>A parsed (and optionally checked, from M4 on) CEL expression.</summary>
+/// <summary>A parsed (and optionally checked) CEL expression.</summary>
 public sealed class CelAbstractSyntax
 {
     public CelAbstractSyntax(Expr expr, SourceInfo sourceInfo)
@@ -46,6 +46,8 @@ public sealed class CelAbstractSyntax
 
     public SourceInfo SourceInfo { get; }
 
-    /// <summary>True once the type checker has annotated this AST (M4).</summary>
-    public bool IsChecked => false;
+    /// <summary>Checker output: expression id → deduced type; null until checked.</summary>
+    public IReadOnlyDictionary<long, Types.CelType>? TypeMap { get; internal set; }
+
+    public bool IsChecked => TypeMap is not null;
 }

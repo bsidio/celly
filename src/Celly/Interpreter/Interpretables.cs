@@ -17,13 +17,15 @@ internal sealed class ConstEval(CelValue value) : IInterpretable
 /// Identifier resolution over container-qualified candidate names (longest first), with a fallback
 /// to standard type identifiers (<c>int</c>, <c>list</c>, …).
 /// </summary>
-internal sealed class IdentEval(IReadOnlyList<string> candidates, CelValue? typeIdent) : IInterpretable
+internal sealed class IdentEval(IReadOnlyList<string> candidates, CelValue? typeIdent, bool absolute = false) : IInterpretable
 {
     public CelValue Eval(IActivation activation)
     {
+        // Absolute references (.name) resolve outside comprehension scopes.
+        var scope = absolute ? ScopedActivation.Unwrap(activation) : activation;
         foreach (var name in candidates)
         {
-            if (activation.TryFind(name, out var value))
+            if (scope.TryFind(name, out var value))
             {
                 return value;
             }
@@ -31,6 +33,13 @@ internal sealed class IdentEval(IReadOnlyList<string> candidates, CelValue? type
 
         return typeIdent ?? ErrorValue.NoSuchAttribute(candidates[^1]);
     }
+}
+
+/// <summary>A direct reference to a comprehension variable (shadows all qualified resolution).</summary>
+internal sealed class ScopeIdentEval(string name) : IInterpretable
+{
+    public CelValue Eval(IActivation activation) =>
+        activation.TryFind(name, out var value) ? value : ErrorValue.NoSuchAttribute(name);
 }
 
 internal static class CandidateResolution
@@ -60,11 +69,16 @@ internal static class CandidateResolution
 /// variable named "a.b.c" (per container resolution) rather than field accesses, so qualified
 /// candidates are tried against the activation before falling back to evaluating the operand.
 /// </summary>
-internal sealed class SelectEval(IInterpretable operand, string field, IReadOnlyList<string> qualifiedCandidates) : IInterpretable
+internal sealed class SelectEval(
+    IInterpretable operand,
+    string field,
+    IReadOnlyList<string> qualifiedCandidates,
+    bool absolute = false) : IInterpretable
 {
     public CelValue Eval(IActivation activation)
     {
-        if (CandidateResolution.Resolve(activation, qualifiedCandidates) is { } bound)
+        var scope = absolute ? ScopedActivation.Unwrap(activation) : activation;
+        if (CandidateResolution.Resolve(scope, qualifiedCandidates) is { } bound)
         {
             return bound;
         }

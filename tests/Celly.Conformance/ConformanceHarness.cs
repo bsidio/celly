@@ -20,12 +20,19 @@ public static class ConformanceHarness
         {
             Container = test.Container,
             DisableMacros = test.DisableMacros,
+            Declarations =
+            [
+                .. test.TypeEnv
+                    .Where(d => d.DeclKindCase == Cel.Expr.Decl.DeclKindOneofCase.Ident)
+                    .Select(ToVariableDecl),
+            ],
+            FunctionDeclarations =
+            [
+                .. test.TypeEnv
+                    .Where(d => d.DeclKindCase == Cel.Expr.Decl.DeclKindOneofCase.Function)
+                    .Select(ToFunctionDecl),
+            ],
         });
-
-        if (test.CheckOnly)
-        {
-            throw new NotSupportedException("check_only requires the M4 type checker");
-        }
 
         var parsed = env.Parse(test.Expr);
         if (parsed.Ast is null)
@@ -37,6 +44,42 @@ public static class ConformanceHarness
 
             throw new InvalidOperationException(
                 $"parse failed: {string.Join("; ", parsed.Issues)} (expr: {test.Expr})");
+        }
+
+        if (!test.DisableCheck)
+        {
+            var checkResult = env.Check(parsed.Ast);
+            if (checkResult.HasErrors)
+            {
+                if (ExpectsError(test))
+                {
+                    return; // type errors satisfy error expectations
+                }
+
+                throw new InvalidOperationException(
+                    $"check failed: {string.Join("; ", checkResult.Issues)} (expr: {test.Expr})");
+            }
+
+            if (test.ResultMatcherCase == SimpleTest.ResultMatcherOneofCase.TypedResult
+                && test.TypedResult.DeducedType is { } deducedType)
+            {
+                var expectedType = TypeConverter.ToCelType(deducedType);
+                var actualType = parsed.Ast.TypeMap![parsed.Ast.Expr.Id];
+                if (!Celly.Checking.TypeSubstitution.StructuralEquals(expectedType, actualType))
+                {
+                    throw new InvalidOperationException(
+                        $"deduced type mismatch: expected {expectedType}, got {actualType} (expr: {test.Expr})");
+                }
+            }
+        }
+        else if (test.CheckOnly)
+        {
+            throw new InvalidOperationException("check_only test with disable_check is contradictory");
+        }
+
+        if (test.CheckOnly)
+        {
+            return; // deduced-type comparison (above) is the whole assertion
         }
 
         var program = env.Program(parsed.Ast);
@@ -87,6 +130,20 @@ public static class ConformanceHarness
     private static bool ExpectsError(SimpleTest test) =>
         test.ResultMatcherCase is SimpleTest.ResultMatcherOneofCase.EvalError
             or SimpleTest.ResultMatcherOneofCase.AnyEvalErrors;
+
+    private static Celly.Checking.VariableDecl ToVariableDecl(Cel.Expr.Decl decl) =>
+        new(decl.Name, TypeConverter.ToCelType(decl.Ident.Type));
+
+    private static Celly.Checking.FunctionDecl ToFunctionDecl(Cel.Expr.Decl decl) =>
+        new(
+            decl.Name,
+            [
+                .. decl.Function.Overloads.Select(o => new Celly.Checking.OverloadDecl(
+                    o.OverloadId,
+                    [.. o.Params.Select(TypeConverter.ToCelType)],
+                    TypeConverter.ToCelType(o.ResultType),
+                    o.IsInstanceFunction)),
+            ]);
 
     private static IActivation BuildActivation(SimpleTest test)
     {
