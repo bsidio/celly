@@ -91,6 +91,59 @@ not the implementation's capability. (It also demonstrates the result matcher is
 it produces ~1,150 genuine failures when features are disabled — a matcher that trivially
 passed everything would still report 100% in bare mode.)
 
+### The full configuration a runner must use
+
+If you're building your own harness (or auditing), this is the environment the suite
+expects — the same one `ConformanceHarness.Run` builds:
+
+```csharp
+using Celly;
+using Celly.Extensions;
+using Celly.Protobuf;
+
+// 1. Register the conformance proto types (proto2 + proto3 TestAllTypes, and extensions).
+var registry = ProtoTypeRegistry.FromFiles(
+    Cel.Expr.Conformance.Proto2.TestAllTypesReflection.Descriptor,
+    Cel.Expr.Conformance.Proto2.TestAllTypesExtensionsReflection.Descriptor,
+    Cel.Expr.Conformance.Proto3.TestAllTypesReflection.Descriptor);
+
+// 2. Enable ALL extension libraries + proto type support.
+var env = CelEnv.Create(new CelEnvSettings
+{
+    Container    = test.Container,            // per-test: namespace for name resolution
+    TypeProvider = registry,                  // messages, WKTs, Any, enums, wrappers
+    Adapter      = registry,
+    Libraries =
+    [
+        OptionalsLibrary.Instance,            // ?., [?], optional.of/orValue/...   (optionals)
+        StringsLibrary.Instance,              // substring, format, indexOf, ...     (string_ext)
+        MathLibrary.Instance,                 // math.greatest, bitAnd, ...          (math_ext)
+        EncodersLibrary.Instance,             // base64                              (encoders_ext)
+        BindingsLibrary.Instance,             // cel.bind                            (bindings_ext)
+        BlockLibrary.Instance,                // cel.block                           (block_ext)
+        TwoVarComprehensionsLibrary.Instance, // all/exists with 2 vars              (macros2)
+        ProtosLibrary.Instance,               // proto.getExt/hasExt                 (proto2_ext)
+        NetworkLibrary.Instance,              // ip(), cidr()                        (network_ext)
+    ],
+    // per-test: convert `type_env` decls to Declarations / FunctionDeclarations.
+});
+```
+
+Two more per-suite details, or those files fail:
+
+- **`type_env`** on each test → map to `Declarations` (variables) and `FunctionDeclarations`.
+- **`strong_*` enum sections** run in strong-enum mode — they assert the *opposite* of the
+  legacy sections. Use `ProtoTypeRegistry.FromFiles(strongEnums: true, …)` and add
+  `registry.CreateEnumConversionLibrary()` for those sections.
+
+Or don't build a harness at all — the correct one is in the repo:
+
+```bash
+git clone https://github.com/bsidio/celly && cd celly
+dotnet test tests/Celly.Conformance             # 2456/2456
+CELLY_BARE=1 dotnet test tests/Celly.Conformance # ~1,300 — features off, for comparison
+```
+
 ## The strong-enum caveat, stated plainly
 
 The suite's `enums` file contains `legacy_*` and `strong_*` sections that run the **same

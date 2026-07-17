@@ -22,6 +22,34 @@ var env = CelEnv.Create(new CelEnvSettings
 });
 ```
 
+!!! tip "Enabling everything (e.g. to run the conformance suite)"
+    Extensions are opt-in — a bare environment can't evaluate `optional.of(...)`,
+    `'x'.substring(1)`, `math.greatest(...)` etc., because those functions aren't registered.
+    This is the same model as cel-go (`ext.Strings()`, `cel.OptionalTypes()`, …). To turn on
+    the full feature set, add every library plus protobuf support:
+
+    ```csharp
+    using Celly.Extensions;
+    using Celly.Protobuf;
+
+    var registry = ProtoTypeRegistry.FromFiles(/* your proto descriptors */);
+    var env = CelEnv.Create(new CelEnvSettings
+    {
+        TypeProvider = registry,
+        Adapter = registry,
+        Libraries =
+        [
+            OptionalsLibrary.Instance, StringsLibrary.Instance, MathLibrary.Instance,
+            EncodersLibrary.Instance, BindingsLibrary.Instance, BlockLibrary.Instance,
+            TwoVarComprehensionsLibrary.Instance, ProtosLibrary.Instance, NetworkLibrary.Instance,
+        ],
+    });
+    ```
+
+    See [Conformance Testing](../internals/conformance.md#extensions-and-proto-support-are-opt-in)
+    for the exact configuration the test suite uses (and why running without it reports a
+    misleadingly low pass rate).
+
 ## Optionals
 
 First-class "maybe a value" without null-tripping errors:
