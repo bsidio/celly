@@ -94,13 +94,17 @@ public sealed class Generator(int seed)
     {
         if (atom)
         {
-            return _random.Next(5) switch
+            return _random.Next(8) switch
             {
                 0 => "d",
                 1 => (_random.NextDouble() * 200 - 100).ToString("R", CultureInfo.InvariantCulture),
                 2 => "0.0",
                 3 => "1.5",
-                _ => "3.14159",
+                4 => "3.14159",
+                // Large/small magnitudes exercise Go's 'g' scientific-notation threshold.
+                5 => (_random.NextDouble() * 1e24).ToString("R", CultureInfo.InvariantCulture),
+                6 => (_random.NextDouble() * 1e-8).ToString("R", CultureInfo.InvariantCulture),
+                _ => $"{_random.Next(1, 999)}e{_random.Next(-12, 12)}",
             };
         }
 
