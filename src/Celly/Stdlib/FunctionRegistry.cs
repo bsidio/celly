@@ -58,9 +58,19 @@ public static class StandardFunctions
         registry.Register(Operators.LogicalNot, args =>
             args[0] is BoolValue b ? BoolValue.Of(!b.Value) : ErrorValue.NoSuchOverload());
 
-        // Index and membership.
-        registry.Register(Operators.Index, args =>
-            args[0] is IIndexerValue idx ? idx.Get(args[1]) : ErrorValue.NoSuchOverload());
+        // Index and membership. Indexing through an optional chains optionally.
+        registry.Register(Operators.Index, args => args[0] switch
+        {
+            IIndexerValue idx => idx.Get(args[1]),
+            OptionalValue { HasValue: false } => OptionalValue.None,
+            OptionalValue opt when opt.Value is MapValue innerMap =>
+                innerMap.TryGet(args[1], out var found) ? OptionalValue.OfValue(found) : OptionalValue.None,
+            OptionalValue opt when opt.Value is ListValue innerList =>
+                innerList.Get(args[1]) is { } item && item is not ErrorValue
+                    ? OptionalValue.OfValue(item)
+                    : OptionalValue.None,
+            _ => ErrorValue.NoSuchOverload(),
+        });
         registry.Register(Operators.In, args =>
             args[1] is IContainsTester c ? c.Contains(args[0]) : ErrorValue.NoSuchOverload());
 

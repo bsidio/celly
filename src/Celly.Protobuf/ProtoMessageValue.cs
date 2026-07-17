@@ -11,8 +11,11 @@ namespace Celly.Protobuf;
 /// is field-wise CEL equality (presence-aware, IEEE NaN semantics — deliberately NOT proto.Equal,
 /// which treats NaN bitwise).
 /// </summary>
-public sealed class ProtoMessageValue : CelValue, IStructValue
+public sealed class ProtoMessageValue : CelValue, IStructValue, IZeroTester
 {
+    /// <summary>All-fields-unset test (proto3 defaults serialize to nothing).</summary>
+    public bool IsZeroValue() => Message.CalculateSize() == 0;
+
     private readonly ProtoTypeRegistry _registry;
 
     public ProtoMessageValue(IMessage message, ProtoTypeRegistry registry)

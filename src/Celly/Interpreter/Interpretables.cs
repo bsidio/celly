@@ -73,13 +73,54 @@ internal sealed class SelectEval(
         }
 
         var value = operand.Eval(activation);
-        return value switch
+        return Select(value, field);
+    }
+
+    /// <summary>Field selection incl. optional chaining: select on an optional yields an optional.</summary>
+    internal static CelValue Select(CelValue value, string field)
+    {
+        switch (value)
         {
-            ErrorValue or UnknownValue => value,
-            MapValue map => map.Get(StringValue.Of(field)),
-            Providers.IStructValue st => st.GetField(field),
-            _ => ErrorValue.NoSuchOverload(),
-        };
+            case ErrorValue or UnknownValue:
+                return value;
+            case MapValue map:
+                return map.Get(StringValue.Of(field));
+            case Providers.IStructValue st:
+                return st.GetField(field);
+            case OptionalValue opt:
+            {
+                if (!opt.HasValue)
+                {
+                    return OptionalValue.None;
+                }
+
+                switch (opt.Value)
+                {
+                    case MapValue inner:
+                        return inner.TryGet(StringValue.Of(field), out var found)
+                            ? OptionalValue.OfValue(found)
+                            : OptionalValue.None;
+                    case Providers.IStructValue innerStruct:
+                    {
+                        var has = innerStruct.HasField(field);
+                        if (has is ErrorValue error)
+                        {
+                            return error;
+                        }
+
+                        return has is BoolValue { Value: true }
+                            ? OptionalValue.OfValue(innerStruct.GetField(field))
+                            : OptionalValue.None;
+                    }
+
+                    default:
+                        return ErrorValue.NoSuchOverload();
+                }
+            }
+
+            default:
+                return ErrorValue.NoSuchOverload();
+        }
     }
 }
 
@@ -94,6 +135,13 @@ internal sealed class TestOnlySelectEval(IInterpretable operand, string field) :
             ErrorValue or UnknownValue => value,
             MapValue map => map.Contains(StringValue.Of(field)),
             Providers.IStructValue st => st.HasField(field),
+            OptionalValue { HasValue: false } => BoolValue.False,
+            OptionalValue opt => opt.Value switch
+            {
+                MapValue inner => inner.Contains(StringValue.Of(field)),
+                Providers.IStructValue innerStruct => innerStruct.HasField(field),
+                _ => ErrorValue.NoSuchOverload(),
+            },
             _ => ErrorValue.NoSuchOverload(),
         };
     }

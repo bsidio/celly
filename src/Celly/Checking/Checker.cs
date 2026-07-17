@@ -214,6 +214,10 @@ public sealed class Checker
                 }
 
                 break;
+            case CelTypeKind.Opaque when TypeSubstitution.IsOptional(operandType):
+                // Optional chaining: selecting through an optional yields an optional.
+                resultType = CelType.Optional(CelType.Dyn);
+                break;
             default:
                 resultType = ReportType(select, $"type '{operandType}' does not support field selection");
                 break;
@@ -266,7 +270,8 @@ public sealed class Checker
         }
         else
         {
-            if (QualifiedName(call.Target) is { } targetName)
+            if (QualifiedName(call.Target) is { } targetName
+                && scope.FindScopedVariable(RootSegment(targetName)) is null)
             {
                 foreach (var name in CandidateNames(targetName + "." + call.Function))
                 {
@@ -373,9 +378,14 @@ public sealed class Checker
     private CelType CheckList(ListExpr list, TypeEnv scope)
     {
         CelType? element = null;
-        foreach (var item in list.Elements)
+        for (var i = 0; i < list.Elements.Count; i++)
         {
-            var itemType = CheckExpr(item, scope);
+            var itemType = CheckExpr(list.Elements[i], scope);
+            if (list.OptionalIndices.Contains(i))
+            {
+                itemType = UnwrapOptional(itemType); // [?e] contributes the optional's inner type
+            }
+
             element = element is null ? itemType : _substitution.Join(element, itemType);
         }
 
@@ -390,11 +400,24 @@ public sealed class Checker
         {
             var keyType = CheckExpr(entry.Key, scope);
             var valueType = CheckExpr(entry.Value, scope);
+            if (entry.Optional)
+            {
+                valueType = UnwrapOptional(valueType);
+            }
+
             key = key is null ? keyType : _substitution.Join(key, keyType);
             value = value is null ? valueType : _substitution.Join(value, valueType);
         }
 
         return CelType.Map(key ?? FreshTypeParam(), value ?? FreshTypeParam());
+    }
+
+    private CelType UnwrapOptional(CelType type)
+    {
+        var resolved = _substitution.Resolve(type);
+        return TypeSubstitution.IsOptional(resolved) && resolved.Parameters.Count == 1
+            ? resolved.Parameters[0]
+            : resolved;
     }
 
     private CelType CheckStruct(StructExpr st, TypeEnv scope)
@@ -433,9 +456,11 @@ public sealed class Checker
                 continue;
             }
 
-            if (!_substitution.IsAssignable(fieldType, valueType))
+            // Optional-entry values ({?field: v}) carry optional-wrapped types.
+            var expected = field.Optional ? CelType.Optional(fieldType) : fieldType;
+            if (!_substitution.IsAssignable(expected, valueType))
             {
-                Report(st, $"expected type of field '{field.Name}' is '{fieldType}' but provided type is '{_substitution.Finalize(valueType)}'");
+                Report(st, $"expected type of field '{field.Name}' is '{expected}' but provided type is '{_substitution.Finalize(valueType)}'");
             }
         }
 

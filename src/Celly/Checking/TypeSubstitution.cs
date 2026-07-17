@@ -82,9 +82,10 @@ public sealed class TypeSubstitution
             return true;
         }
 
-        // null is assignable to message, wrapper, and well-known time types.
+        // null is assignable to message, wrapper, abstract (incl. optional), and time types.
         if (from.Kind == CelTypeKind.Null
-            && (target.Kind is CelTypeKind.Struct or CelTypeKind.Timestamp or CelTypeKind.Duration || IsWrapper(target)))
+            && (target.Kind is CelTypeKind.Struct or CelTypeKind.Timestamp or CelTypeKind.Duration or CelTypeKind.Opaque
+                || IsWrapper(target)))
         {
             return true;
         }
@@ -133,13 +134,13 @@ public sealed class TypeSubstitution
         var speculative = Snapshot();
         if (IsAssignable(a, b))
         {
-            return IsEqualOrLessSpecific(Resolve(b), Resolve(a)) ? Resolve(b) : Resolve(a);
+            return IsEqualOrLessSpecific(DeepResolve(b), DeepResolve(a)) ? DeepResolve(b) : DeepResolve(a);
         }
 
         Restore(speculative);
         if (IsAssignable(b, a))
         {
-            return IsEqualOrLessSpecific(Resolve(a), Resolve(b)) ? Resolve(a) : Resolve(b);
+            return IsEqualOrLessSpecific(DeepResolve(a), DeepResolve(b)) ? DeepResolve(a) : DeepResolve(b);
         }
 
         Restore(speculative);
@@ -150,6 +151,12 @@ public sealed class TypeSubstitution
     private static bool IsEqualOrLessSpecific(CelType a, CelType b)
     {
         if (a.Kind is CelTypeKind.Dyn or CelTypeKind.TypeParam)
+        {
+            return true;
+        }
+
+        // wrapper(T) is less specific than T (it admits null as well).
+        if (IsWrapper(a) && StructuralEquals(a.Parameters[0], b))
         {
             return true;
         }
@@ -197,6 +204,21 @@ public sealed class TypeSubstitution
 
     public static bool IsWrapper(CelType type) =>
         type.Kind == CelTypeKind.Opaque && string.Equals(type.Name, "wrapper", StringComparison.Ordinal);
+
+    public static bool IsOptional(CelType type) =>
+        type.Kind == CelTypeKind.Opaque && string.Equals(type.Name, "optional_type", StringComparison.Ordinal);
+
+    /// <summary>Deep substitution resolve (parameters included), without collapsing unbound params.</summary>
+    public CelType DeepResolve(CelType type)
+    {
+        type = Resolve(type);
+        if (type.Parameters.Count == 0)
+        {
+            return type;
+        }
+
+        return new CelType(type.Kind, type.Name, [.. type.Parameters.Select(DeepResolve)]);
+    }
 
     private bool Occurs(string paramName, CelType type)
     {

@@ -84,3 +84,9 @@ public interface IIterableValue
 {
     IEnumerable<CelValue> Iterate();
 }
+
+/// <summary>Zero-value test used by optional.ofNonZeroValue (messages: all fields unset).</summary>
+public interface IZeroTester
+{
+    bool IsZeroValue();
+}

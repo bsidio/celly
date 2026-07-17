@@ -27,6 +27,10 @@ public sealed class Planner(FunctionRegistry functions, string container, Provid
         ["type"] = new TypeValue(CelType.TypeType),
         ["google.protobuf.Timestamp"] = new TypeValue(CelType.Timestamp),
         ["google.protobuf.Duration"] = new TypeValue(CelType.Duration),
+        // Extension type idents (inert unless the corresponding library is enabled).
+        ["optional_type"] = new TypeValue(CelType.OptionalDyn),
+        ["net.IP"] = new TypeValue(CelType.Opaque("net.IP")),
+        ["net.CIDR"] = new TypeValue(CelType.Opaque("net.CIDR")),
     };
 
     /// <summary>In-scope comprehension variable names (refcounted for same-name nesting).</summary>
@@ -183,6 +187,20 @@ public sealed class Planner(FunctionRegistry functions, string container, Provid
                 return new ConditionalEval(Plan(call.Args[0]), Plan(call.Args[1]), Plan(call.Args[2]));
             case Operators.NotStrictlyFalse:
                 return new NotStrictlyFalseEval(Plan(call.Args[0]));
+        }
+
+        // A receiver-style call on a pure ident chain may be a namespace-qualified global
+        // function (optional.of, math.greatest, base64.encode, …).
+        if (call.Target is not null && QualifiedName(call.Target) is { } targetName
+            && !_scopeVars.ContainsKey(RootSegment(targetName)))
+        {
+            foreach (var candidate in ResolveCandidateNames(targetName + "." + call.Function))
+            {
+                if (functions.Find(candidate) is { } qualifiedImpl)
+                {
+                    return new CallEval(candidate, qualifiedImpl, [.. call.Args.Select(Plan)]);
+                }
+            }
         }
 
         var argEvals = new List<IInterpretable>(call.Args.Count + 1);

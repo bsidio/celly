@@ -705,13 +705,19 @@ public sealed class CelParser
 
     private Expr? MaybeExpandMacro(int callOffset, Expr? target, string function, List<Expr> args)
     {
-        if (!_macros.TryGetValue((function, args.Count, target is not null), out var macro))
+        if (!_macros.TryGetValue((function, args.Count, target is not null), out var macro)
+            && !_macros.TryGetValue((function, Macro.VarArg, target is not null), out macro))
         {
             return null;
         }
 
         var ctx = new MacroContext(this, callOffset);
         var expanded = macro.Expand(ctx, target, args);
+        if (expanded is null)
+        {
+            return null; // the macro declined; parse as an ordinary call
+        }
+
         var originalCall = new CallExpr(0, target, function, args);
         _sourceInfo.AddMacroCall(expanded.Id, originalCall);
         return expanded;

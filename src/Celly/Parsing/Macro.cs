@@ -23,16 +23,23 @@ public interface IMacroContext
     Expr ReportError(string message);
 }
 
-/// <summary>A parse-time macro: rewrites a matching call into another expression form.</summary>
-public sealed class Macro(string function, int argCount, bool receiverStyle, Func<IMacroContext, Expr?, IReadOnlyList<Expr>, Expr> expander)
+/// <summary>
+/// A parse-time macro: rewrites a matching call into another expression form. An expander may
+/// return null to decline (e.g. cel.bind only applies when the receiver is the ident 'cel'),
+/// in which case the call parses as an ordinary function call.
+/// </summary>
+public sealed class Macro(string function, int argCount, bool receiverStyle, Func<IMacroContext, Expr?, IReadOnlyList<Expr>, Expr?> expander)
 {
+    /// <summary>ArgCount for variadic macros.</summary>
+    public const int VarArg = -1;
+
     public string Function { get; } = function;
 
     public int ArgCount { get; } = argCount;
 
     public bool ReceiverStyle { get; } = receiverStyle;
 
-    public Expr Expand(IMacroContext ctx, Expr? target, IReadOnlyList<Expr> args) => expander(ctx, target, args);
+    public Expr? Expand(IMacroContext ctx, Expr? target, IReadOnlyList<Expr> args) => expander(ctx, target, args);
 
     public (string, int, bool) Key => (Function, ArgCount, ReceiverStyle);
 }

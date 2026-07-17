@@ -33,6 +33,9 @@ public sealed class CelEnvSettings
 
     /// <summary>Additional function declarations visible to the type checker.</summary>
     public IReadOnlyList<Checking.FunctionDecl> FunctionDeclarations { get; init; } = [];
+
+    /// <summary>Opt-in extension libraries (strings, math, optionals, …).</summary>
+    public IReadOnlyList<CelLibrary> Libraries { get; init; } = [];
 }
 
 /// <summary>
@@ -47,12 +50,27 @@ public sealed class CelEnv
     private CelEnv(CelEnvSettings settings)
     {
         Settings = settings;
+        var macros = new List<Parsing.Macro>();
+        if (!settings.DisableMacros)
+        {
+            macros.AddRange(StandardMacros.All);
+            foreach (var library in settings.Libraries)
+            {
+                macros.AddRange(library.Macros);
+            }
+        }
+
         _parserOptions = new ParserOptions
         {
             EnableOptionalSyntax = settings.EnableOptionalSyntax,
-            Macros = settings.DisableMacros ? [] : StandardMacros.All,
+            Macros = macros,
         };
         _functions = StandardFunctions.CreateRegistry();
+        foreach (var library in settings.Libraries)
+        {
+            library.Functions?.Invoke(_functions);
+        }
+
         settings.ConfigureFunctions?.Invoke(_functions);
     }
 
@@ -68,7 +86,7 @@ public sealed class CelEnv
     public Checking.CheckResult Check(CelAbstractSyntax ast)
     {
         var functions = Checking.StandardDecls.CreateFunctions();
-        foreach (var fn in Settings.FunctionDeclarations)
+        foreach (var fn in Settings.Libraries.SelectMany(l => l.FunctionDecls).Concat(Settings.FunctionDeclarations))
         {
             functions[fn.Name] = functions.TryGetValue(fn.Name, out var existing)
                 ? new Checking.FunctionDecl(fn.Name, [.. existing.Overloads, .. fn.Overloads])
@@ -81,7 +99,7 @@ public sealed class CelEnv
             env.AddVariable(ident);
         }
 
-        foreach (var decl in Settings.Declarations)
+        foreach (var decl in Settings.Libraries.SelectMany(l => l.VariableDecls).Concat(Settings.Declarations))
         {
             env.AddVariable(decl);
         }

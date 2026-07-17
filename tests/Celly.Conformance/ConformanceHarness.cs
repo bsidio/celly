@@ -28,6 +28,18 @@ public static class ConformanceHarness
             DisableMacros = test.DisableMacros,
             TypeProvider = Registry,
             Adapter = Registry,
+            Libraries =
+            [
+                Celly.Extensions.OptionalsLibrary.Instance,
+                Celly.Extensions.BindingsLibrary.Instance,
+                Celly.Extensions.BlockLibrary.Instance,
+                Celly.Extensions.EncodersLibrary.Instance,
+                Celly.Extensions.ProtosLibrary.Instance,
+                Celly.Extensions.TwoVarComprehensionsLibrary.Instance,
+                Celly.Extensions.MathLibrary.Instance,
+                Celly.Extensions.StringsLibrary.Instance,
+                Celly.Extensions.NetworkLibrary.Instance,
+            ],
             Declarations =
             [
                 .. test.TypeEnv
