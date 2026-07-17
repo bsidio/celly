@@ -17,6 +17,9 @@ public class ConformanceTests
         return data;
     }
 
+    private static readonly string? ReportPath = Environment.GetEnvironmentVariable("CELLY_CONFORMANCE_REPORT");
+    private static readonly object ReportLock = new();
+
     [Theory]
     [MemberData(nameof(CaseIds))]
     public void Run(string caseId)
@@ -32,6 +35,19 @@ public class ConformanceTests
         catch (Exception ex)
         {
             failure = ex;
+        }
+
+        // Report mode (CELLY_CONFORMANCE_REPORT=<file>): record pass/fail per case and never
+        // assert — used to regenerate testdata/known-failures.txt after milestone work.
+        if (ReportPath is not null)
+        {
+            lock (ReportLock)
+            {
+                var detail = failure is null ? string.Empty : "\t" + failure.Message.ReplaceLineEndings(" ");
+                File.AppendAllText(ReportPath, $"{(failure is null ? "PASS" : "FAIL")}\t{caseId}{detail}\n");
+            }
+
+            return;
         }
 
         if (failure is null && expectedFailure)
