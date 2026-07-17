@@ -46,6 +46,7 @@ nav:
   - Home: index.md
   - Getting Started: getting-started.md
   - Examples & Recipes: examples.md
+  - Performance: performance.md
   - User Guide:
       - The CEL Language: guide/language.md
       - Environments & Programs: guide/api.md
