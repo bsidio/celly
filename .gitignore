@@ -12,3 +12,6 @@ site/
 
 # Go benchmark build output
 benchmarks/celgo/*.test
+
+# Differential harness build output
+tools/differential/celgo/celgodiff
