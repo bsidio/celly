@@ -159,6 +159,8 @@ sealed class Celly.CelEnv
     readonly Celly.CelEnv Default
 sealed class Celly.CelEnvSettings
     .ctor()
+    Celly.Interpreter.EvalLimits EvalLimits { get; set; }
+    Celly.Interpreter.EvalLimits get_EvalLimits()
     Celly.Providers.ITypeAdapter Adapter { get; set; }
     Celly.Providers.ITypeAdapter get_Adapter()
     Celly.Providers.ITypeProvider TypeProvider { get; set; }
@@ -183,6 +185,7 @@ sealed class Celly.CelEnvSettings
     System.Void set_Declarations(System.Collections.Generic.IReadOnlyList<Celly.Checking.VariableDecl> value)
     System.Void set_DisableMacros(System.Boolean value)
     System.Void set_EnableOptionalSyntax(System.Boolean value)
+    System.Void set_EvalLimits(Celly.Interpreter.EvalLimits value)
     System.Void set_FunctionDeclarations(System.Collections.Generic.IReadOnlyList<Celly.Checking.FunctionDecl> value)
     System.Void set_Libraries(System.Collections.Generic.IReadOnlyList<Celly.CelLibrary> value)
     System.Void set_TypeProvider(Celly.Providers.ITypeProvider value)
@@ -210,7 +213,9 @@ sealed class Celly.CelParseException : System.Exception, System.Runtime.Serializ
 sealed class Celly.CelProgram
     Celly.Values.CelValue Eval()
     Celly.Values.CelValue Eval(Celly.Interpreter.IActivation activation)
+    Celly.Values.CelValue Eval(Celly.Interpreter.IActivation activation, Celly.Interpreter.EvalLimits limits)
     Celly.Values.CelValue Eval(System.Collections.Generic.IReadOnlyDictionary<System.String, System.Object> bindings)
+    Celly.Values.CelValue Eval(System.Collections.Generic.IReadOnlyDictionary<System.String, System.Object> bindings, Celly.Interpreter.EvalLimits limits)
 static class Celly.CellyInfo
     const System.String SpecCommit
 sealed class Celly.Checking.CheckResult
@@ -392,6 +397,23 @@ sealed class Celly.Interpreter.EmptyActivation : Celly.Interpreter.IActivation
     .ctor()
     System.Boolean TryFind(System.String name, ref Celly.Values.CelValue value)
     readonly Celly.Interpreter.EmptyActivation Instance
+sealed class Celly.Interpreter.EvalContext
+    .ctor(Celly.Interpreter.EvalLimits limits)
+    Celly.Interpreter.EvalLimits Limits { get; }
+    Celly.Interpreter.EvalLimits get_Limits()
+    Celly.Values.ErrorValue Charge(System.Int64 count)
+    readonly Celly.Interpreter.EvalContext Unlimited
+sealed class Celly.Interpreter.EvalLimits
+    .ctor()
+    System.Boolean IsUnlimited { get; }
+    System.Boolean get_IsUnlimited()
+    System.Int64 MaxIterations { get; set; }
+    System.Int64 get_MaxIterations()
+    System.Threading.CancellationToken CancellationToken { get; set; }
+    System.Threading.CancellationToken get_CancellationToken()
+    System.Void set_CancellationToken(System.Threading.CancellationToken value)
+    System.Void set_MaxIterations(System.Int64 value)
+    readonly Celly.Interpreter.EvalLimits None
 interface Celly.Interpreter.IActivation
     System.Boolean TryFind(System.String name, ref Celly.Values.CelValue value)
 interface Celly.Interpreter.IInterpretable

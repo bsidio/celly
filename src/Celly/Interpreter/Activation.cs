@@ -50,6 +50,37 @@ public sealed class ValueActivation(IReadOnlyDictionary<string, CelValue> bindin
     public bool TryFind(string name, out CelValue value) => bindings.TryGetValue(name, out value!);
 }
 
+/// <summary>
+/// The evaluation root: carries the per-eval <see cref="EvalContext"/> (limits/iteration budget)
+/// while delegating variable lookups to the caller's activation. Comprehensions resolve the
+/// context by walking the scope chain back to this node.
+/// </summary>
+internal sealed class RootEvalActivation(IActivation inner, EvalContext context) : IActivation
+{
+    public EvalContext Context => context;
+
+    public bool TryFind(string name, out CelValue value) => inner.TryFind(name, out value);
+
+    /// <summary>Finds the eval context for an activation, or the unlimited default.</summary>
+    public static EvalContext Resolve(IActivation activation)
+    {
+        var current = activation;
+        while (true)
+        {
+            switch (current)
+            {
+                case RootEvalActivation root:
+                    return root.Context;
+                case ScopedActivation scoped:
+                    current = scoped.Parent;
+                    continue;
+                default:
+                    return EvalContext.Unlimited;
+            }
+        }
+    }
+}
+
 /// <summary>A single mutable binding over a parent scope (comprehension accumulator / iteration variables).</summary>
 public sealed class ScopedActivation(IActivation parent, string name, CelValue initial) : IActivation
 {

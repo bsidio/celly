@@ -72,3 +72,34 @@ if (value is ErrorValue err)
 
 - Unknown values (`UnknownValue`, from partial evaluation) merge through the same
   machinery: unknown beats error, and two unknowns merge their attribute sets.
+
+## Bounding untrusted evaluation
+
+CEL always terminates, but a comprehension over large data can still be expensive —
+`range.map(x, range.map(y, …))` is quadratic. When you evaluate **untrusted** expressions,
+set an evaluation budget so a hostile expression aborts with an error instead of burning
+CPU and memory:
+
+```csharp
+using Celly.Interpreter;
+
+var env = CelEnv.Create(new CelEnvSettings
+{
+    // Default budget for every Eval in this environment:
+    EvalLimits = new EvalLimits { MaxIterations = 1_000_000 },
+});
+
+var program = env.Compile(untrustedRule);
+var result = program.Eval(bindings);
+if (result is ErrorValue e && e.Message.Contains("iteration budget"))
+{
+    // rejected: too expensive
+}
+```
+
+`MaxIterations` counts **total** comprehension iterations across the whole evaluation (not
+per loop), so nested-comprehension bombs trip it. You can also pass limits per call —
+`program.Eval(bindings, new EvalLimits { MaxIterations = 50_000 })` — or supply a
+`CancellationToken` to abort long evaluations from another thread. The budget is per-`Eval`,
+so it's safe to evaluate one compiled program concurrently. Leave `EvalLimits` unset
+(the default) for trusted, first-party expressions — there's zero overhead on that path.

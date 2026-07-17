@@ -36,6 +36,13 @@ public sealed class CelEnvSettings
 
     /// <summary>Opt-in extension libraries (strings, math, optionals, …).</summary>
     public IReadOnlyList<CelLibrary> Libraries { get; init; } = [];
+
+    /// <summary>
+    /// Default evaluation limits (iteration budget / cancellation) applied to every
+    /// <c>Eval</c> unless overridden per call. Unlimited by default; set this when evaluating
+    /// untrusted expressions.
+    /// </summary>
+    public Interpreter.EvalLimits EvalLimits { get; init; } = Interpreter.EvalLimits.None;
 }
 
 /// <summary>
@@ -118,7 +125,7 @@ public sealed class CelEnv
     public CelProgram Program(CelAbstractSyntax ast)
     {
         var planner = new Planner(_functions, Settings.Container, Settings.TypeProvider);
-        return new CelProgram(planner.Plan(ast.Expr), Settings.Adapter);
+        return new CelProgram(planner.Plan(ast.Expr), Settings.Adapter, Settings.EvalLimits);
     }
 
     /// <summary>Parses and plans in one step; throws <see cref="CelParseException"/> on syntax errors.</summary>
@@ -145,17 +152,30 @@ public sealed class CelProgram
 {
     private readonly IInterpretable _interpretable;
     private readonly ITypeAdapter _adapter;
+    private readonly Interpreter.EvalLimits _defaultLimits;
 
-    internal CelProgram(IInterpretable interpretable, ITypeAdapter adapter)
+    internal CelProgram(IInterpretable interpretable, ITypeAdapter adapter, Interpreter.EvalLimits defaultLimits)
     {
         _interpretable = interpretable;
         _adapter = adapter;
+        _defaultLimits = defaultLimits;
     }
 
-    public CelValue Eval(IActivation activation) => _interpretable.Eval(activation);
+    /// <summary>Evaluates against the given activation, using the environment's default limits.</summary>
+    public CelValue Eval(IActivation activation) => Eval(activation, _defaultLimits);
+
+    /// <summary>Evaluates with an explicit iteration/cancellation budget for this call.</summary>
+    public CelValue Eval(IActivation activation, Interpreter.EvalLimits limits)
+    {
+        var root = limits.IsUnlimited ? activation : new RootEvalActivation(activation, new Interpreter.EvalContext(limits));
+        return _interpretable.Eval(root);
+    }
 
     public CelValue Eval(IReadOnlyDictionary<string, object?> bindings) =>
         Eval(new MapActivation(bindings, _adapter));
+
+    public CelValue Eval(IReadOnlyDictionary<string, object?> bindings, Interpreter.EvalLimits limits) =>
+        Eval(new MapActivation(bindings, _adapter), limits);
 
     public CelValue Eval() => Eval(EmptyActivation.Instance);
 }

@@ -485,6 +485,7 @@ internal sealed class ComprehensionEval(
             return ErrorValue.NoSuchOverload();
         }
 
+        var context = RootEvalActivation.Resolve(activation);
         var accu = new ScopedActivation(activation, accuVar, accuInit.Eval(activation));
         var iterScope = new ScopedActivation(accu, iterVar, NullValue.Instance);
         IActivation loopScope = iterScope;
@@ -498,6 +499,12 @@ internal sealed class ComprehensionEval(
         var index = 0L;
         foreach (var element in iterable.Iterate())
         {
+            // Charge this iteration against the (possibly unlimited) evaluation budget.
+            if (context.Charge(1) is { } budgetError)
+            {
+                return budgetError;
+            }
+
             if (iterVar2 is null)
             {
                 iterScope.Value = element;
