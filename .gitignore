@@ -7,3 +7,4 @@ artifacts/
 .DS_Store
 TestResults/
 BenchmarkDotNet.Artifacts/
+.env
