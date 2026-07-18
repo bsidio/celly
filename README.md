@@ -1,5 +1,13 @@
 # Celly
 
+[![CI](https://github.com/bsidio/celly/actions/workflows/ci.yml/badge.svg)](https://github.com/bsidio/celly/actions/workflows/ci.yml)
+[![Docs](https://github.com/bsidio/celly/actions/workflows/docs.yml/badge.svg)](https://github.com/bsidio/celly/actions/workflows/docs.yml)
+[![Celly](https://img.shields.io/nuget/v/Celly?logo=nuget&label=Celly)](https://www.nuget.org/packages/Celly)
+[![Celly.Protobuf](https://img.shields.io/nuget/v/Celly.Protobuf?logo=nuget&label=Celly.Protobuf)](https://www.nuget.org/packages/Celly.Protobuf)
+[![Celly.Protovalidate](https://img.shields.io/nuget/v/Celly.Protovalidate?logo=nuget&label=Celly.Protovalidate)](https://www.nuget.org/packages/Celly.Protovalidate)
+[![.NET 8.0](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+
 **A native C#/.NET implementation of Google's [Common Expression Language (CEL)](https://github.com/cel-expr/cel-spec).**
 
 Celly is written from scratch in pure managed C# — no WASM shims, no Go-compiled artifacts, no native library bindings.
