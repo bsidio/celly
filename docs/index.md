@@ -35,10 +35,12 @@ CEL guarantees **termination** (no loops or recursion — only bounded comprehen
 |---|---|---|
 | [`Celly`](https://www.nuget.org/packages/Celly) | Parser, type checker, evaluator, standard library, all extension libraries | **None** |
 | [`Celly.Protobuf`](https://www.nuget.org/packages/Celly.Protobuf) | Protobuf message types, well-known types, enums, Any, proto2 extensions | `Celly`, `Google.Protobuf` |
+| [`Celly.Protovalidate`](https://www.nuget.org/packages/Celly.Protovalidate) | [protovalidate](https://github.com/bufbuild/protovalidate) for .NET — validate protobuf messages against `buf.validate` rules | `Celly`, `Celly.Protobuf` |
 
 ```bash
 dotnet add package Celly
-dotnet add package Celly.Protobuf   # only if your data is protobuf messages
+dotnet add package Celly.Protobuf        # only if your data is protobuf messages
+dotnet add package Celly.Protovalidate   # protobuf validation with buf.validate rules
 ```
 
 ## Where to go next

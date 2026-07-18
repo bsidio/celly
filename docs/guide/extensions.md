@@ -46,7 +46,7 @@ var env = CelEnv.Create(new CelEnvSettings
     });
     ```
 
-    See [Conformance Testing](../internals/conformance.md#extensions-and-proto-support-are-opt-in)
+    See [Conformance Testing](../internals/conformance.md#extensions-and-proto-support-are-opt-in-a-runner-must-enable-them)
     for the exact configuration the test suite uses (and why running without it reports a
     misleadingly low pass rate).
 

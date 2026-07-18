@@ -53,6 +53,7 @@ nav:
       - Plain .NET Types (POCOs): guide/native-types.md
       - Extension Libraries: guide/extensions.md
       - Protobuf Support: guide/protobuf.md
+      - Protobuf Validation (protovalidate): guide/protovalidate.md
       - Working with ASTs: guide/ast.md
       - Errors & Absorption: guide/errors.md
   - Internals — How It Works:
