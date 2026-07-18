@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Celly.Protovalidate/Celly.Protovalidate.csproj" />
+    <PackageReference Include="Google.Protobuf" Version="3.31.1" />
+    <PackageReference Include="Grpc.Tools" Version="2.72.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Harness + all conformance case protos. validate.proto is referenced (not regenerated) via
+       the library project, so it's only an import dir here. Exclude the migration-tool fixtures. -->
+  <ItemGroup>
+    <Protobuf Include="../../proto/protovalidate-testing/buf/validate/conformance/**/*.proto"
+              ProtoRoot="../../proto/protovalidate-testing"
+              AdditionalImportDirs="../../proto/protovalidate"
+              GrpcServices="None" Access="Public" />
+  </ItemGroup>
+
+</Project>

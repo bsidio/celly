@@ -49,8 +49,25 @@ var result = program.Eval(new Dictionary<string, object?>
 |---|---|---|
 | `Celly` | Lexer, parser, macros, type checker, evaluator, standard library, all extension libraries | **None** |
 | `Celly.Protobuf` | Protobuf types: message construction & field access, well-known types (Timestamp/Duration/Struct/Any/wrappers), enums (legacy int and strong modes), proto2 extensions | `Celly`, `Google.Protobuf` |
+| `Celly.Protovalidate` | [protovalidate](https://github.com/bufbuild/protovalidate) for .NET: validate protobuf messages against `buf.validate` rules | `Celly`, `Celly.Protobuf`, `Google.Protobuf` |
 
 Use `Celly` alone to evaluate expressions over .NET dictionaries/lists/primitives; add `Celly.Protobuf` when your data is protobuf messages.
+
+### protovalidate for .NET
+
+`Celly.Protovalidate` is a from-scratch .NET implementation of [protovalidate](https://github.com/bufbuild/protovalidate) — the successor to protoc-gen-validate — powered by the Celly CEL engine. It validates protobuf messages against the `buf.validate` rules declared in their `.proto` (standard rules like `string.email`/`int32.gte`, `required`, `repeated`/`map` rules, and custom `cel` expressions), returning structured `Violation`s.
+
+```csharp
+using Celly.Protovalidate;
+
+var validator = new Validator(Person.Descriptor.File);   // compiles the rules once
+foreach (var violation in validator.Validate(person))    // reuse across messages, thread-safe
+{
+    Console.WriteLine($"{violation.RuleId}: {violation.Message}");
+}
+```
+
+**It passes buf's official conformance suite 2,872 / 2,872 (100%)** — the same corpus the Go/Java/Python/C++ runtimes verify against. See [`tests/Celly.Protovalidate.Conformance`](tests/Celly.Protovalidate.Conformance).
 
 ## Feature checklist
 

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package celly.protovalidate.tests;
+
+import "buf/validate/validate.proto";
+
+// A realistic message exercising scalar, string-format, repeated, map, and message-level rules.
+message Person {
+  option (buf.validate.message).cel = {
+    id: "adult_needs_email"
+    expression: "this.age < 18 || this.email != ''"
+  };
+
+  string name = 1 [(buf.validate.field).string.min_len = 1];
+  string email = 2 [(buf.validate.field).string.email = true];
+  int32 age = 3 [(buf.validate.field).int32 = {gte: 0, lte: 150}];
+  repeated string roles = 4 [(buf.validate.field).repeated.min_items = 1];
+  map<string, int32> scores = 5 [(buf.validate.field).map.values.int32.gte = 0];
+}

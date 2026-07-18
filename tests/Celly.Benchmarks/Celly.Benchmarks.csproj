@@ -6,10 +6,18 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Celly/Celly.csproj" />
+    <ProjectReference Include="../../src/Celly.Protovalidate/Celly.Protovalidate.csproj" />
     <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.72.0" PrivateAssets="all" />
     <!-- Other native .NET CEL packages, for apples-to-apples comparison on the same runtime. -->
     <PackageReference Include="Cel.NET" Version="1.1.0" />
     <PackageReference Include="Cel" Version="0.3.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="../Celly.Protovalidate.Tests/testdata/person.proto"
+              ProtoRoot="../Celly.Protovalidate.Tests/testdata"
+              AdditionalImportDirs="../../proto/protovalidate" GrpcServices="None" Access="Public" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Celly.Protovalidate</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <PackageId>Celly.Protovalidate</PackageId>
+    <Description>protovalidate for .NET: validate protobuf messages against buf.validate rules, powered by the Celly CEL engine.</Description>
+    <PackageTags>protovalidate;buf;cel;validation;protobuf;protoc-gen-validate;dotnet;csharp</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!-- Generated proto code isn't XML-documented. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Celly/Celly.csproj" />
+    <ProjectReference Include="../Celly.Protobuf/Celly.Protobuf.csproj" />
+    <PackageReference Include="Google.Protobuf" Version="3.31.1" />
+  </ItemGroup>
+
+  <!-- The buf.validate rule schema (proto2). Generated types expose the (buf.validate.field)
+       extension + the embedded predefined-rule CEL that the validator reads via reflection. -->
+  <ItemGroup>
+    <PackageReference Include="Grpc.Tools" Version="2.72.0" PrivateAssets="all" />
+    <Protobuf Include="../../proto/protovalidate/buf/validate/validate.proto"
+              ProtoRoot="../../proto/protovalidate" GrpcServices="None" Access="Public" />
+  </ItemGroup>
+
+</Project>

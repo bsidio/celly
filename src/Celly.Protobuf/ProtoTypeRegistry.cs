@@ -730,6 +730,8 @@ public sealed class ProtoTypeRegistry : ITypeProvider, ITypeAdapter
     public CelValue NativeToValue(object? value) => value switch
     {
         IMessage message => AdaptMessage(message),
+        // A BytesValue wrapper field surfaces its unwrapped value as a ByteString.
+        ByteString bytes => BytesValue.Of(bytes.ToByteArray()),
         _ => NativeTypeAdapter.Instance.NativeToValue(value),
     };
 
