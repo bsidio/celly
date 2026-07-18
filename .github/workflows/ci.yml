@@ -3,10 +3,17 @@ name: CI
 on:
   push:
     branches: [main]
-  pull_request:
+  # Run PR builds only after a review is submitted (see the `if` gate below for approvals),
+  # instead of on every PR/push — so CI runs on approved PRs, not all PRs.
+  pull_request_review:
+    types: [submitted]
 
 jobs:
   build-test:
+    # Pushes to main always run; PR reviews run only when the review is an approval.
+    if: >-
+      github.event_name == 'push' ||
+      github.event.review.state == 'approved'
     strategy:
       fail-fast: false
       matrix:
@@ -14,6 +21,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # On an approval, build the PR's head commit (not the base branch).
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
@@ -34,6 +44,8 @@ jobs:
     needs: build-test
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
