@@ -15,7 +15,7 @@
   <!-- Package metadata (applies to src/* packable projects) -->
   <PropertyGroup>
     <Authors>Celly Contributors</Authors>
-    <VersionPrefix>1.1.0</VersionPrefix>
+    <VersionPrefix>1.2.0</VersionPrefix>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/bsidio/celly</RepositoryUrl>
