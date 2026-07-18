@@ -56,7 +56,7 @@ foreach (var user in users)
     Console.WriteLine($"\n{user["email"]}  (plan={user["plan"]}, country={user["country"]}):");
     foreach (var (name, program) in compiled)
     {
-        Console.WriteLine($"  {(IsOn(program, user) ? "✅" : "  ")} {name}");
+        Console.WriteLine($"  {(IsOn(program, user) ? "[x]" : "[ ]")} {name}");
     }
 }
 

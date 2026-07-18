@@ -44,13 +44,13 @@ foreach (var (label, obj) in new[] { ("VALID candidate", good), ("INVALID candid
     var violations = Validate(validators, obj);
     if (violations.Count == 0)
     {
-        Console.WriteLine("  ✅ passes all rules");
+        Console.WriteLine("  PASS: all rules satisfied");
     }
     else
     {
         foreach (var v in violations)
         {
-            Console.WriteLine($"  ❌ {v}");
+            Console.WriteLine($"  FAIL: {v}");
         }
     }
 }
