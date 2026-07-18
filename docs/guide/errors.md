@@ -103,3 +103,58 @@ per loop), so nested-comprehension bombs trip it. You can also pass limits per c
 `CancellationToken` to abort long evaluations from another thread. The budget is per-`Eval`,
 so it's safe to evaluate one compiled program concurrently. Leave `EvalLimits` unset
 (the default) for trusted, first-party expressions — there's zero overhead on that path.
+
+## Rejecting expensive expressions *before* they run
+
+`EvalLimits` is a runtime backstop — it aborts a bomb mid-flight. For untrusted expressions
+you often want to reject the expensive ones **at ingest**, before spending anything, the way
+Kubernetes bounds admission-policy cost. `CelEnv.EstimateCost` does a static, worst-case cost
+analysis over a **checked** AST (the compile-time complement to `EvalLimits`):
+
+```csharp
+using Celly.Checking;
+
+var env = CelEnv.Create(new CelEnvSettings
+{
+    Declarations = [new VariableDecl("items", CelType.List(CelType.Int))],
+});
+
+var ast = env.Parse(untrustedRule).Ast!;
+var check = env.Check(ast);                 // cost estimation needs types
+if (check.HasErrors) { /* reject: doesn't type-check */ }
+
+CostEstimate cost = env.EstimateCost(ast);
+if (cost.IsUnbounded || cost.Max > 1_000_000)
+{
+    // reject before evaluating — too expensive, or unbounded on unconstrained input
+}
+```
+
+The estimate is a saturating `[Min, Max]` range in abstract operation units. A comprehension
+multiplies its body cost by the size of the range it iterates, so nested comprehensions
+compound multiplicatively — and iterating an input variable whose size you haven't bounded
+produces an **unbounded** estimate (`cost.IsUnbounded`). That unbounded result is itself the
+signal: "this rule's cost depends on input size you don't control."
+
+To turn "unbounded" into a real number, supply an `ICostEstimator` that bounds input sizes —
+e.g. "the `items` list has at most 100 elements":
+
+```csharp
+sealed class SizeHints : ICostEstimator
+{
+    public SizeEstimate? EstimateSize(string? path, CelType type) => path switch
+    {
+        "items"  => new SizeEstimate(0, 100),    // ≤ 100 elements
+        _        => null,                        // fall back to unbounded
+    };
+}
+
+var bounded = env.EstimateCost(ast, new SizeHints());   // now finite → threshold it
+```
+
+Use both layers together: `EstimateCost` at ingest to reject rules whose worst case is too
+high (or unbounded), and `EvalLimits` at run time as the belt-and-braces backstop against
+whatever slips through (a rule whose cost is fine on typical data but pathological on a
+specific input). The estimator is modelled on cel-go's — same structure (comprehension ranges
+drive the multiplicative blow-up, size-dependent ops like `matches`/`contains`/concatenation
+scale with operand size) — so cost bounds transfer intuitively between the two runtimes.

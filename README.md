@@ -62,6 +62,7 @@ Use `Celly` alone to evaluate expressions over .NET dictionaries/lists/primitive
 - **Protobuf**: message construction with WKT collapse (wrappers → primitives, Struct/Value/ListValue → map/dyn/list), Any pack/unpack with bytewise fallback, presence-aware field-wise message equality, proto2 extension fields, **strong-enum mode** (`ProtoTypeRegistry.FromFiles(strongEnums: true, …)`) where enums are distinct named types — an opt-in the reference Go implementation doesn't offer
 - **Plain .NET types**: `NativeTypeProvider` gives your own classes/records/enums full CEL semantics — construction, typed field access via the checker, `has()` presence, snake_case field aliases, `Nullable<T>` as wrappers — no protobuf required
 - **First-class ASTs**: traversal/inspection tools (`AstTools`), lossless conversion to/from the canonical `cel.expr` protos (`ParsedExpr`/`CheckedExpr` incl. type & reference maps) for caching and cross-implementation interop, and a precedence-aware unparser (AST → source, macros restored to original form)
+- **Untrusted-input safety**: a runtime evaluation budget (`EvalLimits` — iteration cap + `CancellationToken`) *and* static, pre-evaluation cost estimation (`CelEnv.EstimateCost`, cel-go-modelled) to reject expensive or unbounded expressions at ingest
 - **Thread safety**: `CelEnv` and `CelProgram` are immutable; programs are safe for concurrent evaluation
 
 ## Enabling extensions

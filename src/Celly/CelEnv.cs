@@ -122,6 +122,17 @@ public sealed class CelEnv
         return result;
     }
 
+    /// <summary>
+    /// Statically estimates the worst-case evaluation cost of a checked AST, before running it —
+    /// the compile-time complement to the runtime <see cref="Interpreter.EvalLimits"/> budget. Use
+    /// the returned <see cref="Checking.CostEstimate.Max"/> to reject overly-expensive untrusted
+    /// expressions at ingest. Pass <paramref name="hints"/> to bound input sizes; without them,
+    /// comprehensions over input variables estimate as unbounded. Requires a checked AST.
+    /// </summary>
+    public Checking.CostEstimate EstimateCost(
+        CelAbstractSyntax ast, Checking.ICostEstimator? hints = null) =>
+        Checking.CostEstimator.Estimate(ast, hints);
+
     public CelProgram Program(CelAbstractSyntax ast)
     {
         var planner = new Planner(_functions, Settings.Container, Settings.TypeProvider);
